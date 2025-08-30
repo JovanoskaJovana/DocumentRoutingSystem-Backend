@@ -2,14 +2,15 @@ package mk.ukim.finki.routingsystem.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
 
 @Entity
 @Data
-public class User {
+public class Employee {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue (strategy = GenerationType.SEQUENCE, generator = "seq_gen")
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -26,17 +27,22 @@ public class User {
     @JoinColumn(name="department_id")
     private Department department;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 
-    public User() {
+    @Enumerated (EnumType.STRING)
+    private EmployeeType type;
+
+    public Employee() {
     }
 
-    public User(String email, String password, String firstName, String lastName, Department department, Role role) {
+    public Employee(String email, String password, String firstName, String lastName, Department department, Role role, EmployeeType type) {
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.department = department;
         this.role = role;
+        this.type = type;
     }
 }
