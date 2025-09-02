@@ -2,43 +2,59 @@ package mk.ukim.finki.routingsystem.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
 public class Document {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.SEQUENCE, generator = "seq_gen")
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
 
     @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
     private Employee uploadedByEmployee;
 
+    @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime uploadDateTime;
 
     @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
     private Department routedToDepartment;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    private List<Employee> routedToEmployees;
+    @JoinTable(
+            name = "document_routing",
+            joinColumns = @JoinColumn(name = "document_id"),
+            inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private Set<Employee> routedToEmployees = new HashSet<>();
 
-    @ManyToOne
-    private DocumentVersion currentDocumentVersion;
+    @OneToMany (mappedBy = "document", fetch = FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
+    private List<DocumentVersion> documentVersions = new ArrayList<>();
+
+    @Enumerated (EnumType.STRING)
+    private DocumentStatus documentStatus;
 
     public Document() {
     }
 
-    public Document(String title, Employee uploadedByEmployee, LocalDateTime uploadDateTime, Department routedToDepartment, List<Employee> routedToEmployees, DocumentVersion currentDocumentVersion) {
+    public Document(String title, Employee uploadedByEmployee, LocalDateTime uploadDateTime, Department routedToDepartment, Set<Employee> routedToEmployees, List<DocumentVersion> documentVersions, DocumentStatus documentStatus) {
         this.title = title;
         this.uploadedByEmployee = uploadedByEmployee;
         this.uploadDateTime = uploadDateTime;
         this.routedToDepartment = routedToDepartment;
         this.routedToEmployees = routedToEmployees;
-        this.currentDocumentVersion = currentDocumentVersion;
+        this.documentVersions = documentVersions;
+        this.documentStatus = documentStatus;
     }
 }

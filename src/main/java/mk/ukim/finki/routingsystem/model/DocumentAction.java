@@ -12,34 +12,40 @@ import java.time.LocalDateTime;
 public class DocumentAction {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.SEQUENCE, generator = "seq_gen")
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn(nullable=false)
     private Document document;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    private Employee perfromedByEmployee;
+    @JoinColumn(nullable=false)
+    private Employee performedByEmployee;
 
     @Enumerated(EnumType.STRING)
+    @JoinColumn(nullable=false)
     private ActionType performedAction;
 
     @Enumerated(EnumType.STRING)
+    @JoinColumn(nullable=false)
     private DocumentStatus fromStatus;
 
     @Enumerated(EnumType.STRING)
+    @JoinColumn(nullable=false)
     private DocumentStatus toStatus;
 
     private String notes;
 
+    @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime actionDateTime;
 
     public DocumentAction() {
     }
 
-    public DocumentAction(Document document, Employee perfromedByEmployee, ActionType performedAction, DocumentStatus fromStatus, DocumentStatus toStatus, String notes, LocalDateTime actionDateTime) {
+    public DocumentAction(Document document, Employee performedByEmployee, ActionType performedAction, DocumentStatus fromStatus, DocumentStatus toStatus, String notes, LocalDateTime actionDateTime) {
         this.document = document;
-        this.perfromedByEmployee = perfromedByEmployee;
+        this.performedByEmployee = performedByEmployee;
         this.performedAction = performedAction;
         this.fromStatus = fromStatus;
         this.toStatus = toStatus;

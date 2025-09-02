@@ -10,33 +10,39 @@ import java.time.LocalDateTime;
 public class DocumentVersion {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.SEQUENCE, generator = "seq_gen")
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
     private Document document;
 
-    private int version;
+    private int versionNumber;
 
     private String fileName;
 
     @Lob
     @Basic(fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
     private byte[] fileData;
 
     private String changeNote;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
     private Employee uploadedByEmployee;
 
     private LocalDateTime uploadedDateTime;
 
+    @Column(nullable = false, length = 64)
+    private String checksumSha256;
+
     public DocumentVersion() {
     }
 
-    public DocumentVersion(Document document, int version, String fileName, byte[] fileData, String changeNote, Employee uploadedByEmployee, LocalDateTime uploadedDateTime) {
+    public DocumentVersion(Document document, int versionNumber, String fileName, byte[] fileData, String changeNote, Employee uploadedByEmployee, LocalDateTime uploadedDateTime) {
         this.document = document;
-        this.version = version;
+        this.versionNumber = versionNumber;
         this.fileName = fileName;
         this.fileData = fileData;
         this.changeNote = changeNote;
