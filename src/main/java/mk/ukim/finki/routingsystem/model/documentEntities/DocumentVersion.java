@@ -1,12 +1,14 @@
-package mk.ukim.finki.routingsystem.model;
+package mk.ukim.finki.routingsystem.model.documentEntities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mk.ukim.finki.routingsystem.model.Employee;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "document_id", "version_number" }) })
 public class DocumentVersion {
 
     @Id
@@ -23,7 +25,7 @@ public class DocumentVersion {
 
     @Lob
     @Basic(fetch = FetchType.LAZY)
-    @JoinColumn (nullable = false)
+    @Column (nullable = false)
     private byte[] fileData;
 
     private String changeNote;

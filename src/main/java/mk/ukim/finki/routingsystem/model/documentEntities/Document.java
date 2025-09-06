@@ -1,7 +1,9 @@
-package mk.ukim.finki.routingsystem.model;
+package mk.ukim.finki.routingsystem.model.documentEntities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mk.ukim.finki.routingsystem.model.Department;
+import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 
 import java.time.LocalDateTime;
