@@ -42,7 +42,12 @@ public class Document {
     private Set<Employee> routedToEmployees = new HashSet<>();
 
     @OneToMany (mappedBy = "document", fetch = FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
-    private List<DocumentVersion> documentVersions = new ArrayList<>();
+    @OrderBy("versionNumber DESC")
+    private List<DocumentVersion> allDocumentVersions = new ArrayList<>();
+
+    @OneToOne (fetch = FetchType.LAZY)
+    @JoinColumn (nullable = false)
+    private DocumentVersion currentDocumentVersion;
 
     @Enumerated (EnumType.STRING)
     private DocumentStatus documentStatus;
@@ -50,13 +55,25 @@ public class Document {
     public Document() {
     }
 
-    public Document(String title, Employee uploadedByEmployee, LocalDateTime uploadDateTime, Department routedToDepartment, Set<Employee> routedToEmployees, List<DocumentVersion> documentVersions, DocumentStatus documentStatus) {
+    public Document(String title, Employee uploadedByEmployee, LocalDateTime uploadDateTime, Department routedToDepartment, Set<Employee> routedToEmployees, List<DocumentVersion> allDocumentVersions, DocumentVersion currentDocumentVersion, DocumentStatus documentStatus) {
         this.title = title;
         this.uploadedByEmployee = uploadedByEmployee;
         this.uploadDateTime = uploadDateTime;
         this.routedToDepartment = routedToDepartment;
         this.routedToEmployees = routedToEmployees;
-        this.documentVersions = documentVersions;
+        this.allDocumentVersions = allDocumentVersions;
+        this.currentDocumentVersion = currentDocumentVersion;
         this.documentStatus = documentStatus;
+    }
+
+    public void addVersion(DocumentVersion documentVersion) {
+        if (documentVersion != null) {
+            // sets the FK value of the document for the new documentVersion
+            documentVersion.setDocument(this);
+            // keeps the in-memory object graph consistent
+            // immediately includes the new version (without needing to reload the DB)
+            this.allDocumentVersions.add(documentVersion);
+            this.currentDocumentVersion = documentVersion;
+        }
     }
 }

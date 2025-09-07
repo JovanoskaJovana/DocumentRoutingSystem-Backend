@@ -30,7 +30,7 @@ public class DocumentAction {
     private Employee performedByEmployee;
 
     @Enumerated(EnumType.STRING)
-    @JoinColumn(nullable=false)
+    @Column(nullable=false)
     private ActionType performedAction;
 
     @Enumerated(EnumType.STRING)
