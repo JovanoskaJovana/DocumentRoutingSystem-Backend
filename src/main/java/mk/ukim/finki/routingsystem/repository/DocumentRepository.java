@@ -20,7 +20,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
      // lists all the documents routed directly to the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByDocumentStatusAndRoutedToEmployees_Id(DocumentStatus status, Long departmentId, Pageable pageable);
+     Page<Document> findAllByDocumentStatusAndRoutedToEmployees_Id(DocumentStatus status, Long employeeId, Pageable pageable);
 
      // loads a document together with its full history - current + all versions
      @EntityGraph(attributePaths = {"currentDocumentVersion", "allDocumentVersions"})
@@ -28,3 +28,4 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
      // findWithVersionsById fixes overriding findById
 
 }
+ 
