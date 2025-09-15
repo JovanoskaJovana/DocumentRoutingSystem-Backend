@@ -2,6 +2,8 @@ package mk.ukim.finki.routingsystem.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
@@ -11,6 +13,8 @@ import java.util.List;
 
 @Entity
 @Data
+@Getter
+@Setter
 public class Employee {
 
     @Id
