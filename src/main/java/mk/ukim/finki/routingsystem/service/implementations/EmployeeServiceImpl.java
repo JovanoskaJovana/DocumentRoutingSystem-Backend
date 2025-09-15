@@ -72,11 +72,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDto update(Long employeeId, EmployeeDto employeeDto) {
 
-        Department department = departmentRepository.findById(employeeDto.departmentId())
-                .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
-
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+
+        Department department = departmentRepository.findById(employeeDto.departmentId())
+                .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
 
         employeeMapper.updateEntityFromDto(employeeDto, employee);
         employee.setDepartment(department);
