@@ -1,11 +1,10 @@
 package mk.ukim.finki.routingsystem.service.mappers;
 
-import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
 import org.mapstruct.*;
 
-@Mapper (componentModel = "spring")
+@Mapper (componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface EmployeeMapper {
 
     // employeeDto for responses (never expose the password)
@@ -20,7 +19,7 @@ public interface EmployeeMapper {
 
     @Mapping(target = "id",          ignore = true)
     @Mapping(target = "type",        source = "employeeType")
-    @Mapping(target = "department",  source = "departmentId")
+    @Mapping(target = "department",  ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
     Employee toNewEntity(EmployeeDto employeeDto);
 
@@ -34,19 +33,7 @@ public interface EmployeeMapper {
             @Mapping(target = "lastName", source = "lastName"),
             @Mapping(target = "role", source = "role"),
             @Mapping(target = "type", source = "employeeType"),
-            @Mapping(target = "department", source = "departmentId")
     })
     void updateEntityFromDto(EmployeeDto employeeDto, @MappingTarget Employee employeeTarget);
-
-    default Department map(Long departmentId) {
-
-        if (departmentId == null) {
-            return null;
-        }
-
-        Department d = new Department();
-        d.setId(departmentId);
-        return d;
-    }
 
 }
