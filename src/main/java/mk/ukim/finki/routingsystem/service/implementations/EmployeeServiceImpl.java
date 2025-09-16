@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -41,18 +42,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDto findById(Long id) {
+    public Optional<EmployeeDto> findById(Long id) {
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        return employeeMapper.toDto(employee);
+        return Optional.of(employeeMapper.toDto(employee));
 
     }
 
     @Transactional
     @Override
-    public EmployeeDto create(EmployeeDto employeeDto) {
+    public Optional<EmployeeDto> create(EmployeeDto employeeDto) {
 
         Department department = departmentRepository.findById(employeeDto.departmentId())
                 .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
@@ -64,13 +65,13 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
         }
 
-        return employeeMapper.toDto(employeeRepository.save(employee));
+        return Optional.of(employeeMapper.toDto(employeeRepository.save(employee)));
 
     }
 
     @Transactional
     @Override
-    public EmployeeDto update(Long employeeId, EmployeeDto employeeDto) {
+    public Optional<EmployeeDto> update(Long employeeId, EmployeeDto employeeDto) {
 
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
@@ -85,7 +86,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
         }
 
-        return employeeMapper.toDto(employeeRepository.save(employee));
+        return Optional.of(employeeMapper.toDto(employeeRepository.save(employee)));
 
     }
 
