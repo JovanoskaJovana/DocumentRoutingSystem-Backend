@@ -4,8 +4,6 @@ package mk.ukim.finki.routingsystem.service.implementations;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
-import mk.ukim.finki.routingsystem.model.exceptions.DepartmentNotFoundException;
-import mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.EmployeeService;
@@ -15,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -41,63 +40,77 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDto findById(Long id) {
+    public Optional<EmployeeDto> findById(Long id) {
 
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
-
-        return employeeMapper.toDto(employee);
+        return employeeRepository.findById(id)
+                .map(employeeMapper::toDto);
 
     }
 
     @Transactional
     @Override
-    public EmployeeDto create(EmployeeDto employeeDto) {
+    public Optional<EmployeeDto> create(EmployeeDto employeeDto) {
 
-        Department department = departmentRepository.findById(employeeDto.departmentId())
-                .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
-
-        Employee employee = employeeMapper.toNewEntity(employeeDto);
-        employee.setDepartment(department);
-
-        if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
-            employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
+        if (employeeDto.departmentId() == null) {
+            return Optional.empty();
         }
 
-        return employeeMapper.toDto(employeeRepository.save(employee));
+        Optional <Department> department = departmentRepository.findById(employeeDto.departmentId());
+        if (department.isEmpty()) {
+            return Optional.empty();
+        }
 
-    }
-
-    @Transactional
-    @Override
-    public EmployeeDto update(Long employeeId, EmployeeDto employeeDto) {
-
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
-
-        Department department = departmentRepository.findById(employeeDto.departmentId())
-                .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
-
-        employeeMapper.updateEntityFromDto(employeeDto, employee);
-        employee.setDepartment(department);
+        Employee employee = employeeMapper.toNewEntity(employeeDto);
+        employee.setDepartment(department.get());
 
         if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
             employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
         }
 
-        return employeeMapper.toDto(employeeRepository.save(employee));
+        EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
+        return Optional.of(savedDto);
 
     }
 
     @Transactional
     @Override
-    public void delete(Long employeeId) {
+    public Optional<EmployeeDto> update(Long employeeId, EmployeeDto employeeDto) {
+
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+        if (optionalEmployee.isEmpty()) {
+            return Optional.empty();
+        }
+        Employee employee = optionalEmployee.get();
+
+        if (employeeDto.departmentId() != null) {
+            Optional <Department> department = departmentRepository.findById(employeeDto.departmentId());
+            if (department.isEmpty()) {
+                return Optional.empty();
+            }
+            employee.setDepartment(department.get());
+        }
+
+        employeeMapper.updateEntityFromDto(employeeDto, employee);
+
+        if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
+            employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
+        }
+
+        EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
+        return Optional.of(savedDto);
+
+    }
+
+    @Transactional
+    @Override
+    public boolean delete(Long employeeId) {
 
         if (!employeeRepository.existsById(employeeId)) {
-            throw new EmployeeNotFoundException("Employee not found");
+            return false;
         }
 
         employeeRepository.deleteById(employeeId);
+        return true;
     }
 
 
