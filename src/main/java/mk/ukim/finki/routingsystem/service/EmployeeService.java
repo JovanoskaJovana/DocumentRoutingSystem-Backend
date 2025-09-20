@@ -11,7 +11,7 @@ public interface EmployeeService {
 
      Optional<EmployeeDto> findById(Long id);
   
-     Optional<EmployeeDto> create(EmployeeDto employeeDto);
+     EmployeeDto save(EmployeeDto employeeDto);
 
      Optional<EmployeeDto> update(Long employeeId, EmployeeDto employeeDto);
 

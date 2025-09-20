@@ -4,6 +4,7 @@ package mk.ukim.finki.routingsystem.service.implementations;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
+import mk.ukim.finki.routingsystem.model.exceptions.DepartmentNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.EmployeeService;
@@ -49,28 +50,26 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional
     @Override
-    public Optional<EmployeeDto> create(EmployeeDto employeeDto) {
-
+    public EmployeeDto save(EmployeeDto employeeDto) {
 
         if (employeeDto.departmentId() == null) {
-            return Optional.empty();
+            throw new DepartmentNotFoundException("Department ID is required");
         }
 
         Optional <Department> department = departmentRepository.findById(employeeDto.departmentId());
         if (department.isEmpty()) {
-            return Optional.empty();
+            throw new DepartmentNotFoundException("Department not found");
         }
 
         Employee employee = employeeMapper.toNewEntity(employeeDto);
         employee.setDepartment(department.get());
 
         if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
-            employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
+            employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
         }
 
 
-        EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
-        return Optional.of(savedDto);
+        return employeeMapper.toDto(employeeRepository.save(employee));
 
     }
 
@@ -94,8 +93,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employeeMapper.updateEntityFromDto(employeeDto, employee);
 
+
         if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
-            employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
+            employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
         }
 
         EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
