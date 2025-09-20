@@ -2,6 +2,7 @@ package mk.ukim.finki.routingsystem.web;
 
 import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
 import mk.ukim.finki.routingsystem.service.EmployeeService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +33,11 @@ public class EmployeeRestController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeeDto> create(@RequestBody EmployeeDto employeeDto){
+    public ResponseEntity<EmployeeDto> save(@RequestBody EmployeeDto employeeDto){
 
-        return employeeService.create(employeeDto)
-                .map(employee -> ResponseEntity.ok().body(employee))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+        EmployeeDto savedEmployee = employeeService.save(employeeDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployee);
+
     }
 
     @PutMapping("/{id}")
@@ -51,8 +52,10 @@ public class EmployeeRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id){
 
-        employeeService.delete(id);
-        return ResponseEntity.noContent().build();
+        boolean deleted = employeeService.delete(id);
+
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+
     }
 
 }
