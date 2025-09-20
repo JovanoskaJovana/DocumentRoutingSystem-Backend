@@ -41,7 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Optional<EmployeeDto> findById(Long id) {
-
+      
         return employeeRepository.findById(id)
                 .map(employeeMapper::toDto);
 
@@ -50,6 +50,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Override
     public Optional<EmployeeDto> create(EmployeeDto employeeDto) {
+
 
         if (employeeDto.departmentId() == null) {
             return Optional.empty();
@@ -66,6 +67,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
             employee.setPasswordHash(passwordEncoder.encode(employee.getPasswordHash()));
         }
+
 
         EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
         return Optional.of(savedDto);
