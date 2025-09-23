@@ -1,5 +1,6 @@
 package mk.ukim.finki.routingsystem;
 
+import mk.ukim.finki.routingsystem.config.RoutingProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -17,5 +18,9 @@ public class RoutingSystemApplication {
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
+
+	@Bean
+	public RoutingProperties routingProperties() { return new RoutingProperties(); }
+
 
 }
