@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
 
-public record EmployeeDto(
+public record CreateDisplayEmployeeDto(
 
         Long employeeId,
         String email,
