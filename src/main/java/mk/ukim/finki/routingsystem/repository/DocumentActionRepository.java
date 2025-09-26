@@ -13,6 +13,6 @@ public interface DocumentActionRepository extends JpaRepository<DocumentAction, 
     List<DocumentAction> findByDocument_IdOrderByActionDateTime(Long documentId);
 
     // lists all the actions made by a specific employee
-    List<DocumentAction> findByPerformedByEmployee_Id(Long performedByEmployeeId);
+    List<DocumentAction> findByDocument_IdAndPerformedByEmployee_IdOrderByActionDateTime(Long documentId, Long performedByEmployeeId);
 
 }

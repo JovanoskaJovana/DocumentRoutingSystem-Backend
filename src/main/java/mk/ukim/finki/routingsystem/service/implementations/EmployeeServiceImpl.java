@@ -3,7 +3,7 @@ package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
-import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
 import mk.ukim.finki.routingsystem.model.exceptions.DepartmentNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
@@ -33,7 +33,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
     @Override
-    public List<EmployeeDto> listAll() {
+    public List<CreateDisplayEmployeeDto> listAll() {
 
         return employeeRepository.findAll()
                 .stream().map(employeeMapper::toDto).toList();
@@ -41,7 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Optional<EmployeeDto> findById(Long id) {
+    public Optional<CreateDisplayEmployeeDto> findById(Long id) {
       
         return employeeRepository.findById(id)
                 .map(employeeMapper::toDto);
@@ -50,22 +50,22 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional
     @Override
-    public EmployeeDto save(EmployeeDto employeeDto) {
+    public CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto) {
 
-        if (employeeDto.departmentId() == null) {
+        if (createDisplayEmployeeDto.departmentId() == null) {
             throw new DepartmentNotFoundException("Department ID is required");
         }
 
-        Optional <Department> department = departmentRepository.findById(employeeDto.departmentId());
+        Optional <Department> department = departmentRepository.findById(createDisplayEmployeeDto.departmentId());
         if (department.isEmpty()) {
             throw new DepartmentNotFoundException("Department not found");
         }
 
-        Employee employee = employeeMapper.toNewEntity(employeeDto);
+        Employee employee = employeeMapper.toNewEntity(createDisplayEmployeeDto);
         employee.setDepartment(department.get());
 
-        if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
-            employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
+        if (createDisplayEmployeeDto.password() != null && !createDisplayEmployeeDto.password().isBlank()) {
+            employee.setPasswordHash(passwordEncoder.encode(createDisplayEmployeeDto.password()));
         }
 
 
@@ -75,7 +75,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional
     @Override
-    public Optional<EmployeeDto> update(Long employeeId, EmployeeDto employeeDto) {
+    public Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto) {
 
         Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
         if (optionalEmployee.isEmpty()) {
@@ -83,22 +83,22 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         Employee employee = optionalEmployee.get();
 
-        if (employeeDto.departmentId() != null) {
-            Optional <Department> department = departmentRepository.findById(employeeDto.departmentId());
+        if (createDisplayEmployeeDto.departmentId() != null) {
+            Optional <Department> department = departmentRepository.findById(createDisplayEmployeeDto.departmentId());
             if (department.isEmpty()) {
                 return Optional.empty();
             }
             employee.setDepartment(department.get());
         }
 
-        employeeMapper.updateEntityFromDto(employeeDto, employee);
+        employeeMapper.updateEntityFromDto(createDisplayEmployeeDto, employee);
 
 
-        if (employeeDto.password() != null && !employeeDto.password().isBlank()) {
-            employee.setPasswordHash(passwordEncoder.encode(employeeDto.password()));
+        if (createDisplayEmployeeDto.password() != null && !createDisplayEmployeeDto.password().isBlank()) {
+            employee.setPasswordHash(passwordEncoder.encode(createDisplayEmployeeDto.password()));
         }
 
-        EmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
+        CreateDisplayEmployeeDto savedDto = employeeMapper.toDto(employeeRepository.save(employee));
         return Optional.of(savedDto);
 
     }

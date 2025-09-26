@@ -36,9 +36,6 @@ public class DocumentVersion {
 
     private LocalDateTime uploadedDateTime;
 
-    @Column(nullable = false, length = 64)
-    private String checksumSha256;
-
     public DocumentVersion() {
     }
 
