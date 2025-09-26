@@ -1,7 +1,7 @@
 package mk.ukim.finki.routingsystem.service.mappers;
 
 import mk.ukim.finki.routingsystem.model.Employee;
-import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
 import org.mapstruct.*;
 
 @Mapper (componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -13,7 +13,7 @@ public interface EmployeeMapper {
     @Mapping(target = "departmentId", source = "department.id")
     @Mapping(target = "employeeType", source = "type")
     @Mapping(target = "password", ignore = true)
-    EmployeeDto toDto(Employee employee);
+    CreateDisplayEmployeeDto toDto(Employee employee);
 
     // create a new Employee from employeeDto
 
@@ -21,7 +21,7 @@ public interface EmployeeMapper {
     @Mapping(target = "type",        source = "employeeType")
     @Mapping(target = "department",  ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
-    Employee toNewEntity(EmployeeDto employeeDto);
+    Employee toNewEntity(CreateDisplayEmployeeDto createDisplayEmployeeDto);
 
 
     // update Employee entity from employeeDto (in-place)
@@ -34,6 +34,6 @@ public interface EmployeeMapper {
             @Mapping(target = "role", source = "role"),
             @Mapping(target = "type", source = "employeeType"),
     })
-    void updateEntityFromDto(EmployeeDto employeeDto, @MappingTarget Employee employeeTarget);
+    void updateEntityFromDto(CreateDisplayEmployeeDto createDisplayEmployeeDto, @MappingTarget Employee employeeTarget);
 
 }

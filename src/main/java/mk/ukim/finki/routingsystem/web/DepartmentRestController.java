@@ -1,6 +1,6 @@
 package mk.ukim.finki.routingsystem.web;
 
-import mk.ukim.finki.routingsystem.model.dto.DepartmentDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayDepartmentDto;
 import mk.ukim.finki.routingsystem.service.DepartmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +19,12 @@ public class DepartmentRestController {
     }
 
     @GetMapping
-    public List<DepartmentDto> listAll() {
+    public List<CreateDisplayDepartmentDto> listAll() {
         return departmentService.listAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDto> findById(@PathVariable Long id) {
+    public ResponseEntity<CreateDisplayDepartmentDto> findById(@PathVariable Long id) {
 
         return departmentService.findById(id)
                 .map(ResponseEntity::ok)
@@ -33,17 +33,17 @@ public class DepartmentRestController {
     }
 
     @PostMapping
-    public ResponseEntity<DepartmentDto> save(@RequestBody DepartmentDto departmentDto) {
+    public ResponseEntity<CreateDisplayDepartmentDto> save(@RequestBody CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
-        DepartmentDto saved = departmentService.save(departmentDto);
+        CreateDisplayDepartmentDto saved = departmentService.save(createDisplayDepartmentDto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DepartmentDto> update(@PathVariable Long id ,@RequestBody DepartmentDto departmentDto) {
+    public ResponseEntity<CreateDisplayDepartmentDto> update(@PathVariable Long id , @RequestBody CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
-        return departmentService.update(id, departmentDto)
+        return departmentService.update(id, createDisplayDepartmentDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
 

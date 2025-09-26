@@ -1,19 +1,19 @@
 package mk.ukim.finki.routingsystem.service;
 
-import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeService {
 
-     List<EmployeeDto> listAll();
+     List<CreateDisplayEmployeeDto> listAll();
 
-     Optional<EmployeeDto> findById(Long id);
+     Optional<CreateDisplayEmployeeDto> findById(Long id);
   
-     EmployeeDto save(EmployeeDto employeeDto);
+     CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto);
 
-     Optional<EmployeeDto> update(Long employeeId, EmployeeDto employeeDto);
+     Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto);
 
      boolean delete(Long employeeId);
 

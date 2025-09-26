@@ -1,7 +1,7 @@
 package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.model.Department;
-import mk.ukim.finki.routingsystem.model.dto.DepartmentDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayDepartmentDto;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.service.DepartmentService;
 import org.springframework.stereotype.Service;
@@ -22,42 +22,42 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<DepartmentDto> listAll() {
+    public List<CreateDisplayDepartmentDto> listAll() {
 
         return departmentRepository.findAll()
                 .stream()
-                .map(d -> new DepartmentDto(d.getId(), d.getName()))
+                .map(d -> new CreateDisplayDepartmentDto(d.getId(), d.getName()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<DepartmentDto> findById(Long departmentId) {
+    public Optional<CreateDisplayDepartmentDto> findById(Long departmentId) {
 
         return departmentRepository.findById(departmentId)
-                .map(d -> new DepartmentDto(d.getId(), d.getName()));
+                .map(d -> new CreateDisplayDepartmentDto(d.getId(), d.getName()));
     }
 
     @Transactional
     @Override
-    public DepartmentDto save(DepartmentDto departmentDto) {
+    public CreateDisplayDepartmentDto save(CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
         Department savedDepartment = departmentRepository
-                .save(new Department(departmentDto.name()));
+                .save(new Department(createDisplayDepartmentDto.name()));
 
-        return new DepartmentDto(savedDepartment.getId(), savedDepartment.getName());
+        return new CreateDisplayDepartmentDto(savedDepartment.getId(), savedDepartment.getName());
 
     }
 
     @Transactional
     @Override
-    public Optional<DepartmentDto> update(Long departmentId, DepartmentDto departmentDto) {
+    public Optional<CreateDisplayDepartmentDto> update(Long departmentId, CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
         return departmentRepository.findById(departmentId)
                 .map(d -> {
-                    d.setName(departmentDto.name());
+                    d.setName(createDisplayDepartmentDto.name());
                     departmentRepository.save(d);
-                    return new DepartmentDto(d.getId(), d.getName());
+                    return new CreateDisplayDepartmentDto(d.getId(), d.getName());
                 });
     }
 

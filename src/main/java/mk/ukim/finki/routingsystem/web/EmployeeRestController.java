@@ -1,6 +1,6 @@
 package mk.ukim.finki.routingsystem.web;
 
-import mk.ukim.finki.routingsystem.model.dto.EmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
 import mk.ukim.finki.routingsystem.service.EmployeeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +19,13 @@ public class EmployeeRestController {
     }
 
     @GetMapping
-    public List<EmployeeDto> findAll(){
+    public List<CreateDisplayEmployeeDto> findAll(){
 
         return employeeService.listAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDto> findById(@PathVariable Long id){
+    public ResponseEntity<CreateDisplayEmployeeDto> findById(@PathVariable Long id){
 
         return employeeService.findById(id)
                 .map(employee -> ResponseEntity.ok().body(employee))
@@ -33,18 +33,18 @@ public class EmployeeRestController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeeDto> save(@RequestBody EmployeeDto employeeDto){
+    public ResponseEntity<CreateDisplayEmployeeDto> save(@RequestBody CreateDisplayEmployeeDto createDisplayEmployeeDto){
 
-        EmployeeDto savedEmployee = employeeService.save(employeeDto);
+        CreateDisplayEmployeeDto savedEmployee = employeeService.save(createDisplayEmployeeDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployee);
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDto> update(@PathVariable Long id,
-                                            @RequestBody EmployeeDto employeeDto){
+    public ResponseEntity<CreateDisplayEmployeeDto> update(@PathVariable Long id,
+                                                           @RequestBody CreateDisplayEmployeeDto createDisplayEmployeeDto){
 
-        return employeeService.update(id, employeeDto)
+        return employeeService.update(id, createDisplayEmployeeDto)
                 .map(employee -> ResponseEntity.ok().body(employee))
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }

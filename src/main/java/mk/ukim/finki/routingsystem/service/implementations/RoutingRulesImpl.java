@@ -1,7 +1,11 @@
 package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.config.RoutingProperties;
+import mk.ukim.finki.routingsystem.model.Employee;
+import mk.ukim.finki.routingsystem.model.dto.RoutingResultDto;
 import mk.ukim.finki.routingsystem.model.dto.TitleAndBody;
+import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
+import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.rules.RoutingRules;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +17,15 @@ import java.util.regex.Pattern;
 public class RoutingRulesImpl implements RoutingRules {
 
     private final RoutingProperties routingProperties;
+    private final EmployeeRepository employeeRepository;
 
     // precompiled regexes for department id
     private volatile Map<Long, List<Pattern>> compiled;
 
-    public RoutingRulesImpl(RoutingProperties routingProperties) {
+    public RoutingRulesImpl(RoutingProperties routingProperties, EmployeeRepository employeeRepository) {
         this.routingProperties = routingProperties;
         this.compiled = compile(routingProperties.getKeywordRules());
+        this.employeeRepository = employeeRepository;
     }
 
 
@@ -59,7 +65,7 @@ public class RoutingRulesImpl implements RoutingRules {
 
 
     @Override
-    public Long routeToDepartmentId(TitleAndBody tab) {
+    public RoutingResultDto routeToDepartmentAndEmployees(TitleAndBody tab) {
 
         String title = Optional.ofNullable(tab.title()).orElse("");
         String body = Optional.ofNullable(tab.body()).orElse("");
@@ -91,9 +97,12 @@ public class RoutingRulesImpl implements RoutingRules {
             }
         }
 
+        List<Employee> signatories = employeeRepository
+                .findAllByDepartment_IdAndType(match.getFirst(), EmployeeType.SIGNATORY);
+
         // if there's just one match, return that department's id
         if (match.size() == 1) {
-            return match.getFirst();
+            return new RoutingResultDto(match.getFirst(), signatories);
         }
 
         // if there's more than one department that is a match, restrict scoring to just those
@@ -134,11 +143,12 @@ public class RoutingRulesImpl implements RoutingRules {
             }
         }
 
-        if (bestScore > 0 && matchDept != -1L && !tie) {
-            return matchDept;
-        }
+        Long finalDeptMatch = bestScore > 0 && matchDept != -1L && !tie ? matchDept : routingProperties.getAdminDepartmentId();
+
+        List<Employee> signatories2 = employeeRepository
+                .findAllByDepartment_IdAndType(finalDeptMatch, EmployeeType.SIGNATORY);
 
         // fallback - if the document can't be routed to any of teh departments
-        return routingProperties.getAdminDepartmentId();
+        return new RoutingResultDto(finalDeptMatch, signatories2);
     }
 }

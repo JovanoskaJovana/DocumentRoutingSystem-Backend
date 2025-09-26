@@ -5,10 +5,11 @@ import java.time.LocalDateTime;
 public record DocumentVersionHistoryDto(
 
         Long versionId,
+        Long documentId,
         String versionNumber,
-        String editedBy,
+        String editedByEmployee,
         String changeNote,
         LocalDateTime uploadedDateTime,
         String downloadUrl
 
-        ) {}
+) {}
