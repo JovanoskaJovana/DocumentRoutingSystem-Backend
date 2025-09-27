@@ -1,13 +1,13 @@
-package mk.ukim.finki.routingsystem.model.dto;
+package mk.ukim.finki.routingsystem.model.dto.DocumentVersion;
 
 import java.time.LocalDateTime;
 
-public record DocumentVersionHistoryDto(
+public record DisplayDocumentVersionDto(
 
         Long versionId,
-        Long documentId,
+        String document,
         String versionNumber,
-        String editedByEmployee,
+        String uploadedByEmployee,
         String changeNote,
         LocalDateTime uploadedDateTime,
         String downloadUrl
