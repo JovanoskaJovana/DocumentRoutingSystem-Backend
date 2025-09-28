@@ -6,9 +6,7 @@ import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.CreateDocumentVersionDto;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.DisplayDocumentVersionDto;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.UpdateDocumentAndVersionDto;
-import mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException;
-import mk.ukim.finki.routingsystem.model.exceptions.DocumentVersionNotFound;
-import mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException;
+import mk.ukim.finki.routingsystem.model.exceptions.*;
 import mk.ukim.finki.routingsystem.repository.DocumentRepository;
 import mk.ukim.finki.routingsystem.repository.DocumentVersionRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
@@ -17,6 +15,7 @@ import mk.ukim.finki.routingsystem.service.mappers.DocumentVersionMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +41,7 @@ public class DocumentVersionImpl implements DocumentVersionService {
     }
 
     @Override
+    @Transactional
     public DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto) {
 
         Employee employee = employeeRepository.findById(createDocumentVersionDto.editedByEmployee())
@@ -67,7 +67,8 @@ public class DocumentVersionImpl implements DocumentVersionService {
     }
 
     @Override
-    public DisplayDocumentVersionDto updateADocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto) {
+    @Transactional
+    public DisplayDocumentVersionDto updateADocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto){
 
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
@@ -77,34 +78,47 @@ public class DocumentVersionImpl implements DocumentVersionService {
         DocumentVersion documentVersion = documentVersionRepository.findById(currentVersion.getId())
                 .orElseThrow(() -> new DocumentVersionNotFound("Version for document is not found"));
 
+        boolean newFile = updateDto.fileData() != null && updateDto.fileData().length > 0;
+
+        DocumentVersion nextVersion = new DocumentVersion();
+
+        if (newFile && updateDto.changeNote() == null || updateDto.changeNote().isBlank()) {
+            throw new RequiredChangeNoteException("Change Note is required when uploading a new file");
+        }
+        if (updateDto.editedByEmployeeId() == null) {
+            throw new RequiredEmployeeIdException("Employee Id is required when editing a new file");
+        }
+
+        nextVersion.setVersionNumber(documentVersion.getVersionNumber() == 0 ? 1 : documentVersion.getVersionNumber() + 1);
+
         if (updateDto.title() != null && !updateDto.title().isBlank()) {
-            documentVersion.setFileName(updateDto.title().trim());
+            nextVersion.setFileName(updateDto.title().trim());
             document.setTitle(updateDto.title().trim());
+        } else {
+            nextVersion.setFileName(documentVersion.getFileName());
         }
 
-        if (updateDto.changeNote() != null && !updateDto.changeNote().isBlank()) {
-            documentVersion.setChangeNote(updateDto.changeNote().trim());
+        if (newFile) {
+            nextVersion.setFileData(updateDto.fileData());
+        } else {
+            nextVersion.setFileData(documentVersion.getFileData());
         }
 
-        if (updateDto.editedByEmployeeId() != null) {
+        Employee employee = employeeRepository.findById(updateDto.editedByEmployeeId())
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-            Employee employee = employeeRepository.findById(updateDto.editedByEmployeeId())
-                    .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+        nextVersion.setUploadedByEmployee(employee);
+        document.setUploadedByEmployee(employee);
 
-            documentVersion.setUploadedByEmployee(employee);
-            document.setUploadedByEmployee(employee);
-        }
+        nextVersion.setChangeNote(updateDto.changeNote().trim());
+        nextVersion.setUploadedDateTime(LocalDateTime.now());
+        nextVersion.setDocument(document);
 
-        if (updateDto.fileData() != null && updateDto.fileData().length > 0) {
-            documentVersion.setFileData(updateDto.fileData());
-        }
 
-        documentVersion.setUploadedDateTime(LocalDateTime.now());
-
-        documentVersionRepository.save(documentVersion);
-        document.setCurrentDocumentVersion(documentVersion);
+        documentVersionRepository.save(nextVersion);
+        document.setCurrentDocumentVersion(nextVersion);
         documentRepository.save(document);
 
-        return documentVersionMapper.toDto(documentVersion);
+        return documentVersionMapper.toDto(nextVersion);
     }
 }
