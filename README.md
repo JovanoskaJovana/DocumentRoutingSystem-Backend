@@ -1,5 +1,5 @@
 # RoutingSystemApplication
-A Spring Boot application for managing document routing, approvals and version control within an organization. Employees can upload documents, which are automatically routed to the appropriate department, while the system maintains version history and supports actions such as signing-approval and rejection.
+A Spring Boot application for managing document routing, approvals and version control within an organization. Employees can upload documents, which are automatically routed to the appropriate department, while the system maintains version history and allows signatory employees within the department to approve or reject them.
 
 ### Key Features
 
@@ -11,7 +11,7 @@ A Spring Boot application for managing document routing, approvals and version c
 - Document Management  
   - Upload and manage documents with multiple versions  
   - Track status (PENDING, APPROVED, REJECTED, etc.)  
-  - Route documents to specific departments and employees with SIGNATORY employeeType  
+  - Route documents to specific departments and employees
   - Download latest or specific versions  
 
 - Actions & Events  
