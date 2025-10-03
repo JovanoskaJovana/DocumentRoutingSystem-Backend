@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,7 +21,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
      // lists all the documents routed directly to the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByDocumentStatusAndRoutedToEmployees_Id(DocumentStatus status, Long employeeId, Pageable pageable);
+     Page<Document> findAllByDocumentStatusInAndRoutedToEmployees_Id(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
 
      // loads a document together with its full history - current + all versions
      @EntityGraph(attributePaths = {"currentDocumentVersion", "allDocumentVersions"})
