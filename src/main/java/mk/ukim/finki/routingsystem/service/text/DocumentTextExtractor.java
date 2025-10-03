@@ -1,6 +1,6 @@
 package mk.ukim.finki.routingsystem.service.text;
 
-import mk.ukim.finki.routingsystem.model.dto.TitleAndBody;
+import mk.ukim.finki.routingsystem.model.dto.Document.TitleAndBody;
 
 
 public interface DocumentTextExtractor {
