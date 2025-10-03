@@ -60,7 +60,7 @@ public class DocumentAuth {
                 document.getRoutedToDepartment().getId().equals(principal.getDepartmentId());
 
         boolean isRoutedTo = document.getRoutedToEmployees().stream()
-                .allMatch(employee -> employee.getId().equals(principal.getEmployeeId()));
+                .anyMatch(employee -> employee.getId().equals(principal.getEmployeeId()));
 
         return sameDepartment && isRoutedTo ;
 
