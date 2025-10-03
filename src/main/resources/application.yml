@@ -6,7 +6,7 @@ app:
     # map: departmentId -> list of keywords
     # case-sensitive, word-matched
     keyword-rules:
-      "2": ["invoice", "payment", "finance", "receipt"]
-      "3": ["contract", "agreement", "legal"]
-      "4": ["employee", "vacation", "leave"]
-      "5": ["incident", "bug", "system", "ticket"]
+      "103": ["invoice", "payment", "finance", "receipt"]
+      "104": ["contract", "agreement", "legal"]
+      "105": ["employee", "vacation", "leave", "hr"]
+      "52": ["incident", "bug", "system", "ticket", "it"]

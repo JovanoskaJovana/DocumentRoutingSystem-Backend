@@ -2,8 +2,8 @@ package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.config.RoutingProperties;
 import mk.ukim.finki.routingsystem.model.Employee;
-import mk.ukim.finki.routingsystem.model.dto.RoutingResultDto;
-import mk.ukim.finki.routingsystem.model.dto.TitleAndBody;
+import mk.ukim.finki.routingsystem.model.dto.Document.RoutingResultDto;
+import mk.ukim.finki.routingsystem.model.dto.Document.TitleAndBody;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.rules.RoutingRules;

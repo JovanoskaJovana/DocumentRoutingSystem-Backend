@@ -1,4 +1,4 @@
-package mk.ukim.finki.routingsystem.model.dto;
+package mk.ukim.finki.routingsystem.model.dto.Employee;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;

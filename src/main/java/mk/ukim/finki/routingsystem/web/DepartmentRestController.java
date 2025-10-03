@@ -4,6 +4,7 @@ import mk.ukim.finki.routingsystem.model.dto.CreateDisplayDepartmentDto;
 import mk.ukim.finki.routingsystem.service.DepartmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class DepartmentRestController {
         return departmentService.listAll();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CreateDisplayDepartmentDto> findById(@PathVariable Long id) {
 
@@ -32,6 +34,7 @@ public class DepartmentRestController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CreateDisplayDepartmentDto> save(@RequestBody CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
@@ -40,6 +43,7 @@ public class DepartmentRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<CreateDisplayDepartmentDto> update(@PathVariable Long id , @RequestBody CreateDisplayDepartmentDto createDisplayDepartmentDto) {
 
@@ -49,6 +53,7 @@ public class DepartmentRestController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
 

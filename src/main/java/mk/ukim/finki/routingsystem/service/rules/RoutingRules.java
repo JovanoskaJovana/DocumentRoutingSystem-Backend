@@ -1,7 +1,7 @@
 package mk.ukim.finki.routingsystem.service.rules;
 
-import mk.ukim.finki.routingsystem.model.dto.RoutingResultDto;
-import mk.ukim.finki.routingsystem.model.dto.TitleAndBody;
+import mk.ukim.finki.routingsystem.model.dto.Document.RoutingResultDto;
+import mk.ukim.finki.routingsystem.model.dto.Document.TitleAndBody;
 
 public interface RoutingRules {
 

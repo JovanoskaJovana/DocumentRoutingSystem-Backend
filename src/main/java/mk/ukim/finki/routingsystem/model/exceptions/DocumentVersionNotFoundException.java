@@ -1,7 +1,7 @@
 package mk.ukim.finki.routingsystem.model.exceptions;
 
-public class DocumentVersionNotFound extends RuntimeException {
-    public DocumentVersionNotFound(String message) {
+public class DocumentVersionNotFoundException extends RuntimeException {
+    public DocumentVersionNotFoundException(String message) {
         super(message);
     }
 }
