@@ -6,5 +6,6 @@ public enum DocumentStatus {
     DOWNLOADED,
     REJECTED,
     APPROVED,
-    FAILED_ROUTING
+    FAILED_ROUTING,
+    EDITED
 }

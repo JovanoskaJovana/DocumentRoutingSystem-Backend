@@ -1,6 +1,6 @@
 package mk.ukim.finki.routingsystem.service.implementations;
 
-import mk.ukim.finki.routingsystem.model.dto.TitleAndBody;
+import mk.ukim.finki.routingsystem.model.dto.Document.TitleAndBody;
 import mk.ukim.finki.routingsystem.service.text.DocumentTextExtractor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;

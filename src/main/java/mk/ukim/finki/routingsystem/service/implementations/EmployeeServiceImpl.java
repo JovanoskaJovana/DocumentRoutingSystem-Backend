@@ -3,7 +3,7 @@ package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
-import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.Employee.CreateDisplayEmployeeDto;
 import mk.ukim.finki.routingsystem.model.exceptions.DepartmentNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;

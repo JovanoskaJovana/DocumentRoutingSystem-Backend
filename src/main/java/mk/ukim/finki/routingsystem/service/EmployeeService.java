@@ -1,6 +1,6 @@
 package mk.ukim.finki.routingsystem.service;
 
-import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.Employee.CreateDisplayEmployeeDto;
 
 import java.util.List;
 import java.util.Optional;

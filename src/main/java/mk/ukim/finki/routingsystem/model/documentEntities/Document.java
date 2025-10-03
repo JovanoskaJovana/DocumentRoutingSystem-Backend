@@ -30,7 +30,7 @@ public class Document {
     private LocalDateTime uploadDateTime;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (nullable = false)
+    @JoinColumn (nullable = true)
     private Department routedToDepartment;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -46,7 +46,7 @@ public class Document {
     private List<DocumentVersion> allDocumentVersions = new ArrayList<>();
 
     @OneToOne (fetch = FetchType.LAZY)
-    @JoinColumn (nullable = false)
+    @JoinColumn (nullable = true)
     private DocumentVersion currentDocumentVersion;
 
     @Enumerated (EnumType.STRING)

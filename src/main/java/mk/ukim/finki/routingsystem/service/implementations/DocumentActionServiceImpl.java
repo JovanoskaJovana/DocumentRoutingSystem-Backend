@@ -13,6 +13,7 @@ import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.DocumentActionService;
 import mk.ukim.finki.routingsystem.service.mappers.DocumentActionMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,18 +35,21 @@ public class DocumentActionServiceImpl implements DocumentActionService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<DisplayDocumentActionDto> findAllForADocument(Long documentId) {
         return documentActionRepository.findByDocument_IdOrderByActionDateTime(documentId)
                 .stream().map(documentActionMapper::toDto).toList();
     }
 
     @Override
-    public List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long employeeId, Long documentId) {
-        return documentActionRepository.findByDocument_IdAndPerformedByEmployee_IdOrderByActionDateTime(employeeId, documentId)
+    @Transactional (readOnly = true)
+    public List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long documentId, Long employeeId) {
+        return documentActionRepository.findByDocument_IdAndPerformedByEmployee_IdOrderByActionDateTime(documentId, employeeId)
                 .stream().map(documentActionMapper::toDto).toList();
     }
 
     @Override
+    @Transactional
     public DisplayDocumentActionDto createAndSaveActionForADocument(CreateDocumentActionDto createDocumentActionDto) {
 
         Employee employee = employeeRepository.findById(createDocumentActionDto.performedByEmployeeId())

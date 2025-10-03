@@ -1,7 +1,7 @@
 package mk.ukim.finki.routingsystem.service.mappers;
 
 import mk.ukim.finki.routingsystem.model.Employee;
-import mk.ukim.finki.routingsystem.model.dto.CreateDisplayEmployeeDto;
+import mk.ukim.finki.routingsystem.model.dto.Employee.CreateDisplayEmployeeDto;
 import org.mapstruct.*;
 
 @Mapper (componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)

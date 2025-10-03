@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-// index
 public class DocumentAction {
 
     @Id
@@ -34,11 +33,9 @@ public class DocumentAction {
     private ActionType performedAction;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false)
     private DocumentStatus fromStatus;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false)
     private DocumentStatus toStatus;
 
     private String notes;

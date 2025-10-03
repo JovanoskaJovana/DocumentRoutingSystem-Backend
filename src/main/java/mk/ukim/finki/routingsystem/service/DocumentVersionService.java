@@ -12,6 +12,6 @@ public interface DocumentVersionService {
 
     DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto);
 
-    DisplayDocumentVersionDto updateADocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDocumentAndVersionDto);
+    DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDocumentAndVersionDto);
 
 }

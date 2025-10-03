@@ -7,6 +7,7 @@ public record DisplayDocumentVersionDto(
         Long versionId,
         String document,
         String versionNumber,
+        String fileName,
         String uploadedByEmployee,
         String changeNote,
         LocalDateTime uploadedDateTime,

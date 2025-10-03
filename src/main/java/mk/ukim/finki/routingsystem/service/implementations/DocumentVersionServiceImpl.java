@@ -1,17 +1,21 @@
 package mk.ukim.finki.routingsystem.service.implementations;
 
+import mk.ukim.finki.routingsystem.events.DocumentActionRequestedEvent;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.CreateDocumentVersionDto;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.DisplayDocumentVersionDto;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.UpdateDocumentAndVersionDto;
+import mk.ukim.finki.routingsystem.model.enumerations.ActionType;
+import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.model.exceptions.*;
 import mk.ukim.finki.routingsystem.repository.DocumentRepository;
 import mk.ukim.finki.routingsystem.repository.DocumentVersionRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.DocumentVersionService;
 import mk.ukim.finki.routingsystem.service.mappers.DocumentVersionMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,21 +24,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
-public class DocumentVersionImpl implements DocumentVersionService {
+public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     public final DocumentVersionRepository documentVersionRepository;
     private final DocumentVersionMapper documentVersionMapper;
     private final EmployeeRepository employeeRepository;
     private final DocumentRepository documentRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public DocumentVersionImpl(DocumentVersionRepository documentVersionRepository, DocumentVersionMapper documentVersionMapper, EmployeeRepository employeeRepository, DocumentRepository documentRepository) {
+    public DocumentVersionServiceImpl(DocumentVersionRepository documentVersionRepository, DocumentVersionMapper documentVersionMapper, EmployeeRepository employeeRepository, DocumentRepository documentRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.documentVersionRepository = documentVersionRepository;
         this.documentVersionMapper = documentVersionMapper;
         this.employeeRepository = employeeRepository;
         this.documentRepository = documentRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
+    @Transactional (readOnly = true)
     public Page<DisplayDocumentVersionDto> listAllVersionsOfADocument(Long documentId, Pageable pageable) {
         return documentVersionRepository.findByDocument_IdOrderByVersionNumberDesc(documentId, pageable)
                 .map(documentVersionMapper::toDto);
@@ -53,6 +60,7 @@ public class DocumentVersionImpl implements DocumentVersionService {
         DocumentVersion documentVersion = new DocumentVersion();
         documentVersion.setDocument(document);
         documentVersion.setUploadedByEmployee(employee);
+        documentVersion.setFileName(createDocumentVersionDto.fileName());
         documentVersion.setVersionNumber(createDocumentVersionDto.versionNumber());
         documentVersion.setUploadedDateTime(LocalDateTime.now());
         documentVersion.setFileData(createDocumentVersionDto.fileData());
@@ -60,23 +68,22 @@ public class DocumentVersionImpl implements DocumentVersionService {
 
         documentVersionRepository.save(documentVersion);
 
-        document.setCurrentDocumentVersion(documentVersion);
-        documentRepository.save(document);
-
         return documentVersionMapper.toDto(documentVersion);
     }
 
     @Override
     @Transactional
-    public DisplayDocumentVersionDto updateADocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto){
+    public DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto){
 
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         DocumentVersion currentVersion = document.getCurrentDocumentVersion();
 
+        DocumentStatus from = document.getDocumentStatus();
+
         DocumentVersion documentVersion = documentVersionRepository.findById(currentVersion.getId())
-                .orElseThrow(() -> new DocumentVersionNotFound("Version for document is not found"));
+                .orElseThrow(() -> new DocumentVersionNotFoundException("Version for document is not found"));
 
         boolean newFile = updateDto.fileData() != null && updateDto.fileData().length > 0;
 
@@ -118,6 +125,16 @@ public class DocumentVersionImpl implements DocumentVersionService {
         documentVersionRepository.save(nextVersion);
         document.setCurrentDocumentVersion(nextVersion);
         documentRepository.save(document);
+
+        applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
+                documentId,
+                nextVersion.getId(),
+                employee.getId(),
+                ActionType.EDITED,
+                from,
+                DocumentStatus.EDITED,
+                LocalDateTime.now()
+        ));
 
         return documentVersionMapper.toDto(nextVersion);
     }

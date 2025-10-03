@@ -13,7 +13,7 @@ import org.mapstruct.ReportingPolicy;
 public interface DocumentActionMapper {
 
     @Mapping(target = "actionId", source = "id")
-    @Mapping(target = "document", source = "document.id")
+    @Mapping(target = "document", source = "document.title")
     @Mapping(target = "actionType", source = "performedAction", qualifiedByName = "enumName")
     @Mapping(target = "note", source = "notes")
     @Mapping(target = "dateTime", source = "actionDateTime")
@@ -36,7 +36,7 @@ public interface DocumentActionMapper {
         if ((documentVersion == null) || ((documentVersion.getVersionNumber()) == 0)) {
             return null;
         }
-        return "v " + documentVersion.getVersionNumber();
+        return "v" + documentVersion.getVersionNumber();
     }
 
     @Named("enumName")

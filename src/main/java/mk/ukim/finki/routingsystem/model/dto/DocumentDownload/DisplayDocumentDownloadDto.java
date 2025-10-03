@@ -1,12 +1,12 @@
-package mk.ukim.finki.routingsystem.model.dto;
+package mk.ukim.finki.routingsystem.model.dto.DocumentDownload;
 
 import java.time.LocalDateTime;
 
-public record DocumentDownloadDto(
+public record DisplayDocumentDownloadDto(
         Long downloadId,
-        Long documentId,
         String documentTitle,
         String employee,
         String versionNumber,
         LocalDateTime downloadedAt
-) {}
+) {
+}

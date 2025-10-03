@@ -15,6 +15,8 @@ public interface DocumentVersionMapper {
     @Mapping(target = "document", source = "document.title")
     @Mapping(target = "versionNumber", qualifiedByName = "versionLabel")
     @Mapping(target = "uploadedByEmployee", qualifiedByName = "fullName")
+    @Mapping(target = "fileName", source = "fileName")
+    @Mapping(target = "downloadUrl", source = "documentVersion", qualifiedByName = "downloadUrl")
     DisplayDocumentVersionDto toDto (DocumentVersion documentVersion);
 
     @Named("fullName")
@@ -31,7 +33,19 @@ public interface DocumentVersionMapper {
         if (documentVersion == 0) {
             return null;
         }
-        return "v " + documentVersion;
+        return "v" + documentVersion;
+    }
+
+    @Named("downloadUrl")
+    default String downloadUrl(DocumentVersion documentVersion) {
+        if (documentVersion == null || documentVersion.getId() == null) {
+            return null;
+        }
+
+        Long documentId = documentVersion.getDocument() != null ? documentVersion.getDocument().getId() : null;
+
+        return "/api/documents/" + documentId + "/versions/" +
+                documentVersion.getId() + "/download";
     }
 
 }
