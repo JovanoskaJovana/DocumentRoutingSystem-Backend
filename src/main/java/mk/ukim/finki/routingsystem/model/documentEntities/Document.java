@@ -30,7 +30,7 @@ public class Document {
     private LocalDateTime uploadDateTime;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (nullable = true)
+    @JoinColumn
     private Department routedToDepartment;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -46,7 +46,7 @@ public class Document {
     private List<DocumentVersion> allDocumentVersions = new ArrayList<>();
 
     @OneToOne (fetch = FetchType.LAZY)
-    @JoinColumn (nullable = true)
+    @JoinColumn
     private DocumentVersion currentDocumentVersion;
 
     @Enumerated (EnumType.STRING)
@@ -64,16 +64,5 @@ public class Document {
         this.allDocumentVersions = allDocumentVersions;
         this.currentDocumentVersion = currentDocumentVersion;
         this.documentStatus = documentStatus;
-    }
-
-    public void addVersion(DocumentVersion documentVersion) {
-        if (documentVersion != null) {
-            // sets the FK value of the document for the new documentVersion
-            documentVersion.setDocument(this);
-            // keeps the in-memory object graph consistent
-            // immediately includes the new version (without needing to reload the DB)
-            this.allDocumentVersions.add(documentVersion);
-            this.currentDocumentVersion = documentVersion;
-        }
     }
 }
