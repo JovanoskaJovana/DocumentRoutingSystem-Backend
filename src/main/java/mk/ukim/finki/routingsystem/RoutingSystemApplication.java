@@ -15,11 +15,6 @@ public class RoutingSystemApplication {
 	}
 
 	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-
-	@Bean
 	public RoutingProperties routingProperties() { return new RoutingProperties(); }
 
 
