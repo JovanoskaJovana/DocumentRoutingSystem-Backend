@@ -1,7 +1,7 @@
 # RoutingSystemApplication
 A Spring Boot application for managing document routing, approvals and version control within an organization. Employees can upload documents, which are automatically routed to the appropriate department, while the system maintains version history and allows signatory employees within the department to approve or reject them.
 
-### Key Features
+## Key Features
 
 - Authentication & Security  
   - JWT-based authentication & authorization  
@@ -27,7 +27,7 @@ A Spring Boot application for managing document routing, approvals and version c
   - PostgreSQL for persistent storage  
   - API testing with Postman collections
 
-# API Endpoints
+## API Endpoints
 
 ### Authentication
 - **POST /auth/login** – Authenticate with email and password and receive a JWT token.  
@@ -71,14 +71,14 @@ A Spring Boot application for managing document routing, approvals and version c
 - **DELETE /api/departments/{id}** – Delete a department from the system.  
 
  
-### Tech Stack
+## Tech Stack
 - **Java 21**, **Spring Boot**
 - **PostgreSQL**, **pgAdmin**
 - **Spring Security + JWT**
 - **Maven**
 - **Postman** for API testing
 
-### Flow Example
+## Flow Example
 1. Employee logs in and uploads a document.  
 2. The system automatically routes the document to the correct department.  
 3. A signatory employee reviews and approves or rejects the document.  
