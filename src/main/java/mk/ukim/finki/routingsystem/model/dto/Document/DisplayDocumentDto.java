@@ -2,7 +2,7 @@ package mk.ukim.finki.routingsystem.model.dto.Document;
 
 import java.time.LocalDateTime;
 
-public record RoutedDocumentDto(
+public record DisplayDocumentDto(
         
          Long documentId,
          String title,
