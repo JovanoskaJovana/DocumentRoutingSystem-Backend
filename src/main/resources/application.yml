@@ -10,3 +10,8 @@ app:
       "104": ["contract", "agreement", "legal"]
       "105": ["employee", "vacation", "leave", "hr"]
       "52": ["incident", "bug", "system", "ticket", "it"]
+
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION_TIME_MS}

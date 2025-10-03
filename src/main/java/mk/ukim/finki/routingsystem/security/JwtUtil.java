@@ -13,14 +13,21 @@ import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 
-import static mk.ukim.finki.routingsystem.security.JwtConstants.JWT_EXPIRATION_TIME_MS;
 
 @Component
 public class JwtUtil {
 
+    private final JwtProperties props;
+    private final Key key;
+
+    public JwtUtil(JwtProperties props) {
+        this.props = props;
+        byte[] keyBytes = Decoders.BASE64.decode(props.getSecret());
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+    }
+
     private Key key() {
-        byte[] keyBytes = Decoders.BASE64.decode(JwtConstants.JWT_SECRET);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return this.key;
     }
 
     public String generateToken(Long employeeId, Role role, EmployeeType employeeType, Long departmentId) {
@@ -33,7 +40,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(employeeId.toString())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_TIME_MS))
+                .setExpiration(new Date(System.currentTimeMillis() + props.getExpiration()))
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }

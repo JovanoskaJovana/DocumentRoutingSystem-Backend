@@ -1,6 +1,5 @@
 package mk.ukim.finki.routingsystem.security;
 
-
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,8 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static mk.ukim.finki.routingsystem.security.JwtConstants.HEADER_STRING;
-import static mk.ukim.finki.routingsystem.security.JwtConstants.TOKEN_PREFIX;
+import static mk.ukim.finki.routingsystem.security.JwtProperties.TOKEN_PREFIX;
+import static mk.ukim.finki.routingsystem.security.JwtProperties.HEADER_STRING;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
