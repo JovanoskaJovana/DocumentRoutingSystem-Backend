@@ -1,4 +1,4 @@
-package mk.ukim.finki.routingsystem.model.dto;
+package mk.ukim.finki.routingsystem.model.dto.Document;
 
 import java.time.LocalDateTime;
 
