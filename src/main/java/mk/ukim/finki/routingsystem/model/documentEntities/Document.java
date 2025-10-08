@@ -30,7 +30,6 @@ public class Document {
     private LocalDateTime uploadDateTime;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn
     private Department routedToDepartment;
 
     @ManyToMany(fetch = FetchType.LAZY)

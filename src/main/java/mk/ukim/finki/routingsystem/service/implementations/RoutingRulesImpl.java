@@ -74,72 +74,61 @@ public class RoutingRulesImpl implements RoutingRules {
 
         Map<Long, List<Pattern>> rules = compiled; // snapshot
 
-        List<Long> match = new ArrayList<>();
+        List<Long> matchByTitle = new ArrayList<>();
 
         for (var rule : rules.entrySet()) {
             Long deptId = rule.getKey();
             List<Pattern> patterns = rule.getValue();
 
-            boolean matched = false;
 
             // find if a pattern object is a match to the title
 
             for (Pattern pattern : patterns) {
                 if (pattern.matcher(title).find()) {
-                    matched = true;
+                    matchByTitle.add(deptId);
                     break;
                 }
             }
-
-            // add departmentId in the list in case more than one department is a match
-            if (matched) {
-                match.add(deptId);
-            }
         }
 
-        List<Employee> signatories = employeeRepository
-                .findAllByDepartment_IdAndType(match.getFirst(), EmployeeType.SIGNATORY);
+        if (matchByTitle.size() == 1) {
+            Long departmentId = matchByTitle.get(0);
 
-        // if there's just one match, return that department's id
-        if (match.size() == 1) {
-            return new RoutingResultDto(match.getFirst(), signatories);
+            List<Employee> signatories = employeeRepository
+                    .findAllByDepartment_IdAndType(departmentId, EmployeeType.SIGNATORY);
+            return new RoutingResultDto(departmentId, signatories);
         }
+
 
         // if there's more than one department that is a match, restrict scoring to just those
-        Set<Long> allMatches = match.isEmpty() ? null : new HashSet<>(match);
-
+        Collection<Long> candidates = matchByTitle.isEmpty() ? rules.keySet() : matchByTitle;
 
         long matchDept = -1L;
         long bestScore = -1;
         boolean tie = false;
 
-        for (var rule : rules.entrySet()) {
+        // if we have matches, skip the non-match IDs
+        for (Long deptId : candidates) {
 
-            Long deptId = rule.getKey();
+            int score = 0;
 
-            // if we have matches, skip the non-match IDs
-            if (!allMatches.contains(deptId)) {
+            for (Pattern pattern : rules.get(deptId)) {
 
-                int score = 0;
+                var matched = pattern.matcher(text);
+                // loop the whole text
+                while (matched.find()) {
+                    score++;
+                }
+            }
 
-                 for (Pattern pattern : rule.getValue()) {
+            if (score > bestScore) {
 
-                     var matched = pattern.matcher(text);
-                     // loop the whole text
-                     while (matched.find()) {
-                         score++;
-                     }
-                 }
+                bestScore = score;
+                matchDept = deptId;
+                tie = false;
 
-                 if (score > bestScore) {
-
-                     bestScore = score;
-                     matchDept = deptId;
-                     tie = false;
-
-                 } else if (score == bestScore && score > 0) {
-                     tie = true; // multiple departments with the same best score
-                 }
+            } else if (score == bestScore && score > 0) {
+                tie = true; // multiple departments with the same best score
             }
         }
 
@@ -150,5 +139,8 @@ public class RoutingRulesImpl implements RoutingRules {
 
         // fallback - if the document can't be routed to any of teh departments
         return new RoutingResultDto(finalDeptMatch, signatories2);
+
+
     }
+
 }
