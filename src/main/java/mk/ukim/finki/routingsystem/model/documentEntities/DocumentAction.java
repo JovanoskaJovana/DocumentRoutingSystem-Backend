@@ -5,6 +5,7 @@ import lombok.Data;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.enumerations.ActionType;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -40,7 +41,7 @@ public class DocumentAction {
 
     private String notes;
 
-    @org.hibernate.annotations.CreationTimestamp
+    @CreationTimestamp
     private LocalDateTime actionDateTime;
 
     public DocumentAction() {
