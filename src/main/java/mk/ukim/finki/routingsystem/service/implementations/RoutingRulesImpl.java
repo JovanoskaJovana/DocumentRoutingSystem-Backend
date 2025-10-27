@@ -20,11 +20,11 @@ public class RoutingRulesImpl implements RoutingRules {
     private final EmployeeRepository employeeRepository;
 
     // precompiled regexes for department id
-    private volatile Map<Long, List<Pattern>> compiled;
+    private final Map<Long, List<Pattern>> compiled;
 
     public RoutingRulesImpl(RoutingProperties routingProperties, EmployeeRepository employeeRepository) {
         this.routingProperties = routingProperties;
-        this.compiled = compile(routingProperties.getKeywordRules());
+        this.compiled = Collections.unmodifiableMap(compile(routingProperties.getKeywordRules()));
         this.employeeRepository = employeeRepository;
     }
 
@@ -92,7 +92,7 @@ public class RoutingRulesImpl implements RoutingRules {
         }
 
         if (matchByTitle.size() == 1) {
-            Long departmentId = matchByTitle.get(0);
+            Long departmentId = matchByTitle.getFirst();
 
             List<Employee> signatories = employeeRepository
                     .findAllByDepartment_IdAndType(departmentId, EmployeeType.SIGNATORY);
