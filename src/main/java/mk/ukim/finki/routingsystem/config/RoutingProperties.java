@@ -12,6 +12,8 @@ public class RoutingProperties {
 
     private Long adminDepartmentId = 1L;
 
+    private Map<Long, Integer> minMatches = Map.of();
+
     private Map<Long, List<String>> keywordRules = Map.of();
 
 }

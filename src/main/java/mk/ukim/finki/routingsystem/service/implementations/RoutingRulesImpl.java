@@ -12,135 +12,167 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.regex.Pattern;
 
-
 @Service
 public class RoutingRulesImpl implements RoutingRules {
 
+    private static final int DEFAULT_MIN_MATCHES = 2;
     private final RoutingProperties routingProperties;
     private final EmployeeRepository employeeRepository;
 
-    // precompiled regexes for department id
     private final Map<Long, List<Pattern>> compiled;
 
-    public RoutingRulesImpl(RoutingProperties routingProperties, EmployeeRepository employeeRepository) {
+    private final Map<Long, Integer> minMatches;
+
+    public RoutingRulesImpl(RoutingProperties routingProperties,
+                            EmployeeRepository employeeRepository) {
         this.routingProperties = routingProperties;
-        this.compiled = Collections.unmodifiableMap(compile(routingProperties.getKeywordRules()));
         this.employeeRepository = employeeRepository;
+        this.compiled = Collections.unmodifiableMap(compile(routingProperties.getKeywordRules()));
+
+        Map<Long, Integer> mm = routingProperties.getMinMatches();
+        this.minMatches = mm != null
+                ? Collections.unmodifiableMap(new LinkedHashMap<>(mm))
+                : Collections.emptyMap();
     }
 
-
-    // returns a map -> key:list of pattern objects
-    // uses Pattern objects for compiling once at startup and then just reusing them
-
     private Map<Long, List<Pattern>> compile(Map<Long, List<String>> source) {
-
         Map<Long, List<Pattern>> regexPattern = new LinkedHashMap<>();
 
+        if (source == null) {
+            return regexPattern;
+        }
+
         for (var e : source.entrySet()) {
+            Long deptId = e.getKey();
+            List<String> keywords = e.getValue();
+
+            if (keywords == null) {
+                continue;
+            }
 
             List<Pattern> patterns = new ArrayList<>();
 
-            for (String keyWord : e.getValue()) {
-
+            for (String keyWord : keywords) {
                 if (keyWord == null || keyWord.isBlank()) {
                     continue;
                 }
-
                 patterns.add(word(keyWord));
             }
-            regexPattern.put(e.getKey(), patterns);
+
+            regexPattern.put(deptId, patterns);
         }
+
         return regexPattern;
     }
 
-
-    // regex pattern - avoids false matches
-
     private static Pattern word(String s) {
-
         String w = s.toLowerCase(Locale.ROOT);
         return Pattern.compile("\\b" + Pattern.quote(w) + "\\b", Pattern.CASE_INSENSITIVE);
-
     }
 
+    private int getThresholdForDept(Long deptId) {
+        return Optional.ofNullable(minMatches.get(deptId))
+                .orElse(DEFAULT_MIN_MATCHES);
+    }
+
+    private Optional<Long> pickUniqueWinner(Map<Long, Integer> scores) {
+        if (scores.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int maxScore = scores.values().stream().max(Integer::compareTo).orElse(0);
+
+        List<Long> winners = new ArrayList<>();
+        for (var e : scores.entrySet()) {
+            if (e.getValue() == maxScore) {
+                winners.add(e.getKey());
+            }
+        }
+
+        if (winners.size() == 1) {
+            return Optional.of(winners.getFirst());
+        }
+
+        // tie
+        return Optional.empty();
+    }
 
     @Override
     public RoutingResultDto routeToDepartmentAndEmployees(TitleAndBody tab) {
 
         String title = Optional.ofNullable(tab.title()).orElse("");
         String body = Optional.ofNullable(tab.body()).orElse("");
-        String text = (title + "\n" + body).toLowerCase(Locale.ROOT);
-
+        String text = title + "\n" + body;
 
         Map<Long, List<Pattern>> rules = compiled; // snapshot
 
-        List<Long> matchByTitle = new ArrayList<>();
 
-        for (var rule : rules.entrySet()) {
-            Long deptId = rule.getKey();
-            List<Pattern> patterns = rule.getValue();
+        Map<Long, Integer> titleScores = new HashMap<>();
 
-
-            // find if a pattern object is a match to the title
-
-            for (Pattern pattern : patterns) {
-                if (pattern.matcher(title).find()) {
-                    matchByTitle.add(deptId);
-                    break;
-                }
-            }
-        }
-
-        if (matchByTitle.size() == 1) {
-            Long departmentId = matchByTitle.getFirst();
-
-            List<Employee> signatories = employeeRepository
-                    .findAllByDepartment_IdAndType(departmentId, EmployeeType.SIGNATORY);
-            return new RoutingResultDto(departmentId, signatories);
-        }
-
-
-        // if there's more than one department that is a match, restrict scoring to just those
-        Collection<Long> candidates = matchByTitle.isEmpty() ? rules.keySet() : matchByTitle;
-
-        long matchDept = -1L;
-        long bestScore = -1;
-        boolean tie = false;
-
-        // if we have matches, skip the non-match IDs
-        for (Long deptId : candidates) {
+        for (var entry : rules.entrySet()) {
+            Long deptId = entry.getKey();
+            List<Pattern> patterns = entry.getValue();
 
             int score = 0;
-
-            for (Pattern pattern : rules.get(deptId)) {
-
-                var matched = pattern.matcher(text);
-                // loop the whole text
-                while (matched.find()) {
+            for (Pattern pattern : patterns) {
+                var matcher = pattern.matcher(title);
+                while (matcher.find()) {
                     score++;
                 }
             }
 
-            if (score > bestScore) {
-
-                bestScore = score;
-                matchDept = deptId;
-                tie = false;
-
-            } else if (score == bestScore && score > 0) {
-                tie = true; // multiple departments with the same best score
+            int threshold = getThresholdForDept(deptId);
+            if (score >= threshold) {
+                titleScores.put(deptId, score);
             }
         }
 
-        Long finalDeptMatch = bestScore > 0 && matchDept != -1L && !tie ? matchDept : routingProperties.getAdminDepartmentId();
+        if (!titleScores.isEmpty()) {
+            Optional<Long> winnerOpt = pickUniqueWinner(titleScores);
+            if (winnerOpt.isPresent()) {
+                Long winnerDeptId = winnerOpt.get();
+                List<Employee> signatories = employeeRepository
+                        .findAllByDepartment_IdAndType(winnerDeptId, EmployeeType.SIGNATORY);
+                return new RoutingResultDto(winnerDeptId, signatories);
+            }
+        }
 
-        List<Employee> signatories2 = employeeRepository
+        Map<Long, Integer> textScores = new HashMap<>();
+
+        for (var entry : rules.entrySet()) {
+            Long deptId = entry.getKey();
+            List<Pattern> patterns = entry.getValue();
+
+            int score = 0;
+            for (Pattern pattern : patterns) {
+                var matcher = pattern.matcher(text);
+                while (matcher.find()) {
+                    score++;
+                }
+            }
+
+            int threshold = getThresholdForDept(deptId);
+            if (score >= threshold) {
+                textScores.put(deptId, score);
+            }
+        }
+
+        Long finalDeptMatch;
+
+        if (textScores.isEmpty()) {
+            finalDeptMatch = routingProperties.getAdminDepartmentId();
+        } else {
+            Optional<Long> winnerOpt = pickUniqueWinner(textScores);
+            if (winnerOpt.isPresent()) {
+                finalDeptMatch = winnerOpt.get();
+            } else {
+                finalDeptMatch = routingProperties.getAdminDepartmentId();
+            }
+        }
+
+        List<Employee> signatories = employeeRepository
                 .findAllByDepartment_IdAndType(finalDeptMatch, EmployeeType.SIGNATORY);
 
-        // fallback - if the document can't be routed to any of teh departments
-        return new RoutingResultDto(finalDeptMatch, signatories2);
-
-
+        return new RoutingResultDto(finalDeptMatch, signatories);
     }
-
 }
