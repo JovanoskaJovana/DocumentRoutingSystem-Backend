@@ -13,7 +13,7 @@ import java.util.Arrays;
 @Service
 public class DocumentTextExtractorImpl implements DocumentTextExtractor {
 
-    // extarct all the pages -> 0 = all pages
+    // extract all the pages -> 0 = all pages
     @Value("${app.text.extract.max-pages:0}")
     private int maxPages;
 

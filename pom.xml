@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>mk.ukim.finki</groupId>
-	<artifactId>RoutingSystem</artifactId>
+	<artifactId>RoutingSystem-Backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>RoutingSystem</name>
 	<description>RoutingSystem</description>

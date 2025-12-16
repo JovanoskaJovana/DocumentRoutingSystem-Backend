@@ -3,6 +3,12 @@ app:
     # when no rules match use the admin departmentId
     admin-dept-id: 1
 
+    min-matches:
+      "103": 3   # Finance
+      "104": 3   # Legal
+      "105": 2   # HR
+      "52": 2   # IT
+
     # map: departmentId -> list of keywords
     # case-sensitive, word-matched
     keyword-rules:

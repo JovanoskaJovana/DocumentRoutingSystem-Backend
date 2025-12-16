@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthenticationRestController {
 
     private final EmployeeRepository employeeRepository;
@@ -38,6 +38,7 @@ public class AuthenticationRestController {
 
         String token = jwtUtil.generateToken(
                 employee.getId(),
+                employee.getFirstName(),
                 employee.getRole(),
                 employee.getType(),
                 departmentId
