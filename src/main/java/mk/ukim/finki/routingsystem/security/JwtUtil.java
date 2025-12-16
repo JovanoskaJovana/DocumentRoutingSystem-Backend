@@ -30,8 +30,9 @@ public class JwtUtil {
         return this.key;
     }
 
-    public String generateToken(Long employeeId, Role role, EmployeeType employeeType, Long departmentId) {
+    public String generateToken(Long employeeId, String fullName, Role role, EmployeeType employeeType, Long departmentId) {
         Map<String, Object> claims = Map.of(
+                "firstName", fullName,
                 "role", role.name(),
                 "employeeType", employeeType.name(),
                 "departmentId", departmentId
@@ -53,6 +54,10 @@ public class JwtUtil {
         return Long.valueOf(verifyToken(token).getSubject());
     }
 
+    public String nameFromToken(String token) {
+        return verifyToken(token).get("firstName", String.class);
+    }
+
     public Role roleFromToken(String token) {
         return Role.valueOf(verifyToken(token).get("role", String.class));
     }
@@ -60,7 +65,6 @@ public class JwtUtil {
     public EmployeeType employeeTypeFromToken(String token) {
         return EmployeeType.valueOf(verifyToken(token).get("employeeType", String.class));
     }
-
     public Long departmentIdFromToken(String token) {
         Object dept = verifyToken(token).get("departmentId");
         return dept == null ? null : Long.valueOf(dept.toString());

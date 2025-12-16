@@ -16,12 +16,14 @@ public class EmployeePrincipal implements UserDetails {
     private final Role role;
     private final EmployeeType employeeType;
     private final Long departmentId;
+    private final String firstName;
 
-    public EmployeePrincipal(Long employeeId, Role role, EmployeeType employeeType, Long departmentId) {
+    public EmployeePrincipal(Long employeeId, String firstName, Role role, EmployeeType employeeType, Long departmentId) {
         this.employeeId = employeeId;
         this.role = role;
         this.employeeType = employeeType;
         this.departmentId = departmentId;
+        this.firstName = firstName;
     }
 
 

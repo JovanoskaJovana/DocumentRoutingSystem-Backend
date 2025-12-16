@@ -43,11 +43,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 return;
             }
             Long employeeId = jwtUtil.employeeIdFromToken(token);
+            String firstName = jwtUtil.nameFromToken(token);
             Role role = jwtUtil.roleFromToken(token);
             EmployeeType employeeType = jwtUtil.employeeTypeFromToken(token);
             Long departmentId = jwtUtil.departmentIdFromToken(token);
 
-            EmployeePrincipal employeePrincipal = new EmployeePrincipal(employeeId, role, employeeType, departmentId);
+            EmployeePrincipal employeePrincipal = new EmployeePrincipal(employeeId, firstName, role, employeeType, departmentId);
             var auth = new UsernamePasswordAuthenticationToken(employeePrincipal, null, employeePrincipal.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
