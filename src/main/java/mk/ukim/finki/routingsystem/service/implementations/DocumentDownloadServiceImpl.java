@@ -41,7 +41,7 @@ public class DocumentDownloadServiceImpl implements DocumentDownloadService {
     @Override
     @Transactional(readOnly = true)
     public List<DisplayDocumentDownloadDto> findAllDownloadsByEmployee(Long employeeId) {
-        return documentDownloadRepository.findAllByEmployee_Id(employeeId)
+        return documentDownloadRepository.findAllByEmployee_IdOrderByDownloadDateTimeDesc(employeeId)
                 .stream().map(documentDownloadMapper::toDto).toList();
     }
 

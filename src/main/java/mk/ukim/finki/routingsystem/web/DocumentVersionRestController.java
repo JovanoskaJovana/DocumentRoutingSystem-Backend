@@ -35,7 +35,7 @@ public class DocumentVersionRestController {
 
     @PutMapping(value = "{documentId}/editDocument", consumes = {"multipart/form-data"})
     public ResponseEntity<DisplayDocumentVersionDto> updateDocumentAndVersion(@PathVariable Long documentId,
-                                                                              @RequestParam MultipartFile file,
+                                                                              @RequestParam (required = false) MultipartFile file,
                                                                               @RequestParam String title,
                                                                               @RequestParam String changeNote,
                                                                               @AuthenticationPrincipal EmployeePrincipal employeePrincipal) throws IOException {
@@ -53,5 +53,10 @@ public class DocumentVersionRestController {
         DisplayDocumentVersionDto documentVersionDto = documentVersionService.updateAndSaveDocumentVersion(documentId, updateDocumentAndVersionDto);
 
         return ResponseEntity.ok(documentVersionDto);
+    }
+
+    @GetMapping("version/{versionId}")
+    public ResponseEntity<DisplayDocumentVersionDto> getDocumentVersion(@PathVariable Long versionId) {
+        return ResponseEntity.ok(documentVersionService.getDocumentVersion(versionId));
     }
 }

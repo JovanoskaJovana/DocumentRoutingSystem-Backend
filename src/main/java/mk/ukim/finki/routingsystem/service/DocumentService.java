@@ -19,6 +19,8 @@ public interface DocumentService {
 
     Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable);
 
+    Page<DisplayDocumentDto> findAllUploadedByEmployee (List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable);
+
     DisplayDocumentDto findAllWithVersions(Long documentId);
 
     DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId) throws IOException;

@@ -63,21 +63,28 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional (readOnly = true)
     public Page<DisplayDocumentDto> findAllByRoutedToDepartment(Long departmentId, Pageable pageable) {
-        return documentRepository.findAllByRoutedToDepartment_Id(departmentId, pageable)
+        return documentRepository.findAllByRoutedToDepartment_IdOrderByUploadDateTime(departmentId, pageable)
                 .map(documentMapper::toDto);
     }
 
     @Override
     @Transactional
     public Page<DisplayAdminDocumentDto> findAllByRoutedToDepartmentByAdmin(Long departmentId, Pageable pageable) {
-        return documentRepository.findAllByRoutedToDepartment_Id(departmentId, pageable)
+        return documentRepository.findAllByRoutedToDepartment_IdOrderByUploadDateTime(departmentId, pageable)
                 .map(documentMapper::toAdminDto);
     }
 
     @Override
     @Transactional (readOnly = true)
     public Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable) {
-        return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_Id(documentStatuses, employeeId, pageable)
+        return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_IdOrderByUploadDateTime(documentStatuses, employeeId, pageable)
+                .map(documentMapper::toDto);
+    }
+
+    @Override
+    @Transactional (readOnly = true)
+    public Page<DisplayDocumentDto> findAllUploadedByEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable) {
+        return documentRepository.findAllByDocumentStatusInAndUploadedByEmployee_IdOrderByUploadDateTime(documentStatuses, employeeId, pageable)
                 .map(documentMapper::toDto);
     }
 

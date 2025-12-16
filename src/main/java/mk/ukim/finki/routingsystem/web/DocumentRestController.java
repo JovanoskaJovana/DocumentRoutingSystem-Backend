@@ -4,7 +4,6 @@ import mk.ukim.finki.routingsystem.model.dto.Document.CreateDocumentDto;
 import mk.ukim.finki.routingsystem.model.dto.Document.DisplayDocumentDto;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.security.EmployeePrincipal;
-import mk.ukim.finki.routingsystem.service.DocumentDownloadService;
 import mk.ukim.finki.routingsystem.service.DocumentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +83,12 @@ public class DocumentRestController {
 
         return ResponseEntity.ok(displayDocumentDto);
 
+    }
+
+    @GetMapping("/uploadedDocuments")
+    public ResponseEntity<Page<DisplayDocumentDto>> getUploadedDocuments(@AuthenticationPrincipal EmployeePrincipal employeePrincipal, Pageable pageable) {
+        Page<DisplayDocumentDto> displayDocumentDto = documentService.findAllUploadedByEmployee(List.of(DocumentStatus.ROUTED, DocumentStatus.REJECTED, DocumentStatus.APPROVED), employeePrincipal.getEmployeeId(), pageable);
+        return ResponseEntity.ok(displayDocumentDto);
     }
 
     @GetMapping("/routedToMe/history")

@@ -138,4 +138,10 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
         return documentVersionMapper.toDto(nextVersion);
     }
+
+    @Override
+    public DisplayDocumentVersionDto getDocumentVersion(Long documentVersionId) {
+        return documentVersionRepository.findById(documentVersionId).map(documentVersionMapper::toDto).orElseThrow(() -> new DocumentVersionNotFoundException("Document version not found"));
+
+    }
 }

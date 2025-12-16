@@ -30,7 +30,7 @@ public class DocumentActionRestController {
     public ResponseEntity<List<DisplayDocumentActionDto>> getAllActionsByEmployeeId(@PathVariable Long documentId,
                                                                                     @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        return ResponseEntity.ok(documentActionService.findAllBySpecificEmployee(employeePrincipal.getEmployeeId(), documentId));
+        return ResponseEntity.ok(documentActionService.findAllBySpecificEmployee(documentId, employeePrincipal.getEmployeeId()));
     }
 
 }

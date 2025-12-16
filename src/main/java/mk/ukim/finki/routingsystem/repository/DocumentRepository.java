@@ -17,11 +17,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
      // lists all the documents routed to the same department as the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByRoutedToDepartment_Id(Long departmentId, Pageable pageable);
+     Page<Document> findAllByRoutedToDepartment_IdOrderByUploadDateTime(Long departmentId, Pageable pageable);
 
      // lists all the documents routed directly to the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByDocumentStatusInAndRoutedToEmployees_Id(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
+     Page<Document> findAllByDocumentStatusInAndRoutedToEmployees_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
+
+     @EntityGraph(attributePaths = {"currentDocumentVersion"})
+     Page<Document> findAllByDocumentStatusInAndUploadedByEmployee_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
 
      // loads a document together with its full history - current + all versions
      @EntityGraph(attributePaths = {"currentDocumentVersion", "allDocumentVersions"})
