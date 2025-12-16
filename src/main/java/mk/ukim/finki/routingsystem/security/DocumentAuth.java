@@ -39,33 +39,6 @@ public class DocumentAuth {
         return sameDepartment && isSignatory;
     }
 
-    public boolean canDownload(Long documentId, Object principalObj) {
-
-        EmployeePrincipal principal = extractPrincipal(principalObj);
-
-        if (principal == null) {
-            return false;
-        }
-
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
-
-        if (document == null) {
-            return false;
-        }
-
-
-        boolean sameDepartment = document.getRoutedToDepartment() != null &&
-                principal.getDepartmentId() != null &&
-                document.getRoutedToDepartment().getId().equals(principal.getDepartmentId());
-
-        boolean isRoutedTo = document.getRoutedToEmployees().stream()
-                .anyMatch(employee -> employee.getId().equals(principal.getEmployeeId()));
-
-        return sameDepartment && isRoutedTo ;
-
-    }
-
     private EmployeePrincipal extractPrincipal(Object principalObj) {
         if (principalObj instanceof EmployeePrincipal ep) return ep;
         if (principalObj instanceof org.springframework.security.core.Authentication auth

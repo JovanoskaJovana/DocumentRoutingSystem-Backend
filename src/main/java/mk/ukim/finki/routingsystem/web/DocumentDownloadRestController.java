@@ -43,7 +43,7 @@ public class DocumentDownloadRestController {
         this.documentDownloadService = documentDownloadService;
     }
 
-    @PreAuthorize("@documentAuth.canDownload(#documentId, authentication.principal)")
+
     @GetMapping("{documentId}/versions/{versionId}/download")
     public ResponseEntity<Resource> downloadPdf(@PathVariable Long documentId,
                                                 @PathVariable Long versionId,
