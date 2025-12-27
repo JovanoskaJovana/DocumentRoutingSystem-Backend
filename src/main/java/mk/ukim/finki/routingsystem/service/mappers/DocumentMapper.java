@@ -22,6 +22,7 @@ public interface DocumentMapper {
     @Mapping(target = "documentStatus", expression = "java(document.getDocumentStatus() != null ? document.getDocumentStatus().name() : null)")
     @Mapping(target = "currentVersion", source = "currentDocumentVersion", qualifiedByName = "versionLabel")
     @Mapping(target = "currentVersionDownloadUrl", source = "currentDocumentVersion", qualifiedByName = "downloadUrl")
+    @Mapping(target = "routedToEmployees", source = "routedToEmployees", qualifiedByName = "fullNameList")
     @Mapping(target = "uploadedDateTime", source = "uploadDateTime")
     DisplayDocumentDto toDto(Document document);
 
@@ -35,11 +36,6 @@ public interface DocumentMapper {
     @Mapping(target = "routedToEmployees", source = "routedToEmployees", qualifiedByName = "fullNameList")
     @Mapping(target = "uploadedDateTime", source = "uploadDateTime")
     DisplayAdminDocumentDto toAdminDto(Document document);
-
-    List<DisplayDocumentDto> toRoutedDtoList(List<Document> docs);
-
-    List<DisplayAdminDocumentDto> toAdminDtoList(List<Document> docs);
-
 
     @Named("fullName")
     default String fullName(Employee employee) {
