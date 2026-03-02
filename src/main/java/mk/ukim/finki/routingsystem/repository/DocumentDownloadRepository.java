@@ -10,9 +10,9 @@ import java.util.List;
 public interface DocumentDownloadRepository extends JpaRepository<DocumentDownload, Long> {
 
     // lists all the documents that the logged-in employee has downloaded
-    List<DocumentDownload> findAllByEmployee_IdOrderByDownloadDateTimeDesc(Long id);
+    List<DocumentDownload> findAllByEmployee_IdAndDocument_Company_IdOrderByDownloadDateTimeDesc(Long id, Long companyId);
 
     //lists all the downloads made from a specific document
-    List<DocumentDownload> findAllByDocument_Id(Long id);
+    List<DocumentDownload> findAllByDocument_IdAndDocument_Company_Id(Long id, Long companyId);
 
 }

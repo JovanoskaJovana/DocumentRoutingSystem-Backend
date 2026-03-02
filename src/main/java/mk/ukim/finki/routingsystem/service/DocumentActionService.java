@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface DocumentActionService {
 
-    List<DisplayDocumentActionDto> findAllForADocument(Long documentId);
+    List<DisplayDocumentActionDto> findAllForADocument(Long documentId, Long companyId);
 
-    List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long employeeId, Long documentId);
+    List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long employeeId, Long documentId, Long companyId);
 
-    DisplayDocumentActionDto createAndSaveActionForADocument(CreateDocumentActionDto createDocumentActionDto);
+    DisplayDocumentActionDto createAndSaveActionForADocument(CreateDocumentActionDto createDocumentActionDto,  Long companyId);
 
 
 }

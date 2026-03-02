@@ -14,6 +14,7 @@ public record CreateDisplayEmployeeDto(
         String lastName,
         Long departmentId,
         Role role,
-        EmployeeType employeeType
+        EmployeeType employeeType,
+        Long companyId
 
 ) {}

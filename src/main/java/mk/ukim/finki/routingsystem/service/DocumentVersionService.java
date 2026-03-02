@@ -8,12 +8,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface DocumentVersionService {
 
-    Page<DisplayDocumentVersionDto> listAllVersionsOfADocument(Long documentId, Pageable pageable);
+    Page<DisplayDocumentVersionDto> listAllVersionsOfADocument(Long documentId, Long companyId, Pageable pageable);
 
-    DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto);
+    DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto, Long companyId);
 
-    DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDocumentAndVersionDto);
+    DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDocumentAndVersionDto, Long companyId);
 
-    DisplayDocumentVersionDto getDocumentVersion(Long documentVersionId);
+    DisplayDocumentVersionDto getDocumentVersion(Long documentVersionId, Long companyId);
 
 }

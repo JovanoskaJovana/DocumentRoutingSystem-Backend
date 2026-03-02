@@ -17,7 +17,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,7 +56,7 @@ public class DocumentDownloadRestController {
             throw new DocumentVersionNotFoundException("Version does not belong to this document.");
         }
 
-        FileResource file = fileService.loadFile(documentId, versionId);
+        FileResource file = fileService.loadFile(documentId, versionId, employeePrincipal.getCompanyId());
 
         if (file == null || file.length() == 0) {
             return ResponseEntity.notFound().build();
@@ -97,9 +96,10 @@ public class DocumentDownloadRestController {
 
 
     @GetMapping("/{documentId}/documentDownloads")
-    public ResponseEntity<List<DisplayDocumentDownloadDto>> getDownloadsByDocument(@PathVariable Long documentId) {
+    public ResponseEntity<List<DisplayDocumentDownloadDto>> getDownloadsByDocument(@PathVariable Long documentId,
+                                                                                   @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        return ResponseEntity.ok(documentDownloadService.findAllDownloadsByDocument(documentId));
+        return ResponseEntity.ok(documentDownloadService.findAllDownloadsByDocument(documentId, employeePrincipal.getCompanyId()));
 
     }
 
@@ -107,7 +107,7 @@ public class DocumentDownloadRestController {
     @GetMapping("/downloadsByMe")
     public ResponseEntity<List<DisplayDocumentDownloadDto>> getDownloadsByEmployee(@AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        return ResponseEntity.ok(documentDownloadService.findAllDownloadsByEmployee(employeePrincipal.getEmployeeId()));
+        return ResponseEntity.ok(documentDownloadService.findAllDownloadsByEmployee(employeePrincipal.getEmployeeId(), employeePrincipal.getCompanyId()));
 
     }
 

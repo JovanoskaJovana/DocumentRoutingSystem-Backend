@@ -3,9 +3,12 @@ package mk.ukim.finki.routingsystem.web;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.dto.Employee.LoginRequestDto;
 import mk.ukim.finki.routingsystem.model.dto.Employee.LoginResponseDto;
+import mk.ukim.finki.routingsystem.model.enumerations.Role;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
+import mk.ukim.finki.routingsystem.security.EmployeePrincipal;
 import mk.ukim.finki.routingsystem.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,23 +28,32 @@ public class AuthenticationRestController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        Employee employee = employeeRepository.findByEmail(loginRequestDto.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        Employee employee;
+
+        if (loginRequestDto.companyCode() == null || loginRequestDto.companyCode().isBlank()) {
+            employee = employeeRepository.findByEmailAndRole(loginRequestDto.email(), Role.SUPER_ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        } else {
+            employee = employeeRepository.findByEmailAndCompany_Code(loginRequestDto.email(), loginRequestDto.companyCode())
+                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), employee.getPasswordHash())) {
             return ResponseEntity.status(401).build();
         }
 
         Long departmentId = employee.getDepartment() != null ? employee.getDepartment().getId() : null;
+        Long companyId = employee.getCompany() != null ? employee.getCompany().getId() : null;
 
         String token = jwtUtil.generateToken(
                 employee.getId(),
                 employee.getFirstName(),
                 employee.getRole(),
                 employee.getType(),
-                departmentId
+                departmentId,
+                companyId
         );
         return ResponseEntity.ok(new LoginResponseDto(token));
 

@@ -1,8 +1,6 @@
 package mk.ukim.finki.routingsystem.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -15,10 +13,18 @@ public class Department {
 
     private String name;
 
+    @ManyToOne
+    private Company company;
+
+    @Column(unique = true)
+    private String departmentKey;
+
     public Department() {
     }
 
-    public Department(String name) {
+    public Department(String name, String departmentKey, Company company) {
         this.name = name;
+        this.departmentKey = departmentKey;
+        this.company = company;
     }
 }

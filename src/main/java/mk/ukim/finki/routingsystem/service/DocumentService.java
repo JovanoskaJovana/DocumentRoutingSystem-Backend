@@ -13,21 +13,23 @@ import java.util.List;
 
 public interface DocumentService {
 
-    Page<DisplayDocumentDto> findAllByRoutedToDepartment(Long departmentId, Pageable pageable);
+    Page<DisplayDocumentDto> findAllByRoutedToDepartment(Long departmentId, Long companyId, Pageable pageable);
 
-    Page<DisplayAdminDocumentDto> findAllByRoutedToDepartmentByAdmin(Long departmentId, Pageable pageable);
+    Page<DisplayAdminDocumentDto> findAllByRoutedToDepartmentByAdmin(Long departmentId, Long companyId, Pageable pageable);
 
-    Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable);
+    Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable);
 
-    Page<DisplayDocumentDto> findAllUploadedByEmployee (List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable);
+    Page<DisplayDocumentDto> findAllUploadedByEmployee (List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable);
 
-    DisplayDocumentDto findAllWithVersions(Long documentId);
+    DisplayDocumentDto findAllWithVersions(Long documentId, Long companyId);
 
-    DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId) throws IOException;
+    DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId, Long companyId) throws IOException;
 
-    DisplayDocumentDto routeDocument(Long documentId, Long employeeId);
+    DisplayDocumentDto routeDocument(Long documentId, Long employeeId, Long companyId);
 
-    boolean approveDocument(Long documentId, Long employeeId);
+    DisplayDocumentDto manualRouteDocument(Long documentId, Long employeeId, Long companyId, String departmentKey);
 
-    boolean rejectDocument(Long documentId, Long employeeId);
+    boolean approveDocument(Long documentId, Long employeeId, Long companyId);
+
+    boolean rejectDocument(Long documentId, Long employeeId, Long companyId);
 }

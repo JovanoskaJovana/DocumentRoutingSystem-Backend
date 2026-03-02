@@ -36,26 +36,26 @@ public class DocumentActionServiceImpl implements DocumentActionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DisplayDocumentActionDto> findAllForADocument(Long documentId) {
-        return documentActionRepository.findByDocument_IdOrderByActionDateTime(documentId)
+    public List<DisplayDocumentActionDto> findAllForADocument(Long documentId, Long companyId) {
+        return documentActionRepository.findByDocument_IdAndDocument_Company_IdOrderByActionDateTime(documentId, companyId)
                 .stream().map(documentActionMapper::toDto).toList();
     }
 
     @Override
     @Transactional (readOnly = true)
-    public List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long documentId, Long employeeId) {
-        return documentActionRepository.findByDocument_IdAndPerformedByEmployee_IdOrderByActionDateTime(documentId, employeeId)
+    public List<DisplayDocumentActionDto> findAllBySpecificEmployee(Long documentId, Long employeeId, Long companyId) {
+        return documentActionRepository.findByDocument_IdAndPerformedByEmployee_IdAndDocument_Company_IdOrderByActionDateTime(documentId, employeeId, companyId)
                 .stream().map(documentActionMapper::toDto).toList();
     }
 
     @Override
     @Transactional
-    public DisplayDocumentActionDto createAndSaveActionForADocument(CreateDocumentActionDto createDocumentActionDto) {
+    public DisplayDocumentActionDto createAndSaveActionForADocument(CreateDocumentActionDto createDocumentActionDto, Long companyId) {
 
-        Employee employee = employeeRepository.findById(createDocumentActionDto.performedByEmployeeId())
+        Employee employee = employeeRepository.findByIdAndCompany_Id(createDocumentActionDto.performedByEmployeeId(), companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        Document document = documentRepository.findById(createDocumentActionDto.documentId())
+        Document document = documentRepository.findByIdAndAndCompany_Id(createDocumentActionDto.documentId(), companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         DocumentAction documentAction = new DocumentAction();
@@ -68,7 +68,7 @@ public class DocumentActionServiceImpl implements DocumentActionService {
         documentAction.setPerformedAction(createDocumentActionDto.actionType());
 
         switch (createDocumentActionDto.actionType()) {
-            case UPLOADED -> documentAction.setNotes("Document" + document.getTitle() + " has been uploaded by employee " + employeeName(employee));
+            case UPLOADED -> documentAction.setNotes("Document '" + document.getTitle() + "' has been uploaded by employee " + employeeName(employee));
             case ROUTED -> documentAction.setNotes("Document status change: " + createDocumentActionDto.fromStatus() + " -> " + createDocumentActionDto.toStatus());
             case EDITED -> documentAction.setNotes("Document" + document.getTitle() + " has been edited by employee " + employeeName(employee));
             case APPROVED -> documentAction.setNotes("Document" + document.getTitle() + " has been approved by employee " + employeeName(employee));

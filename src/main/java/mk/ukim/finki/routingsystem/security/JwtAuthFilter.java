@@ -47,8 +47,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Role role = jwtUtil.roleFromToken(token);
             EmployeeType employeeType = jwtUtil.employeeTypeFromToken(token);
             Long departmentId = jwtUtil.departmentIdFromToken(token);
+            Long companyId = jwtUtil.companyFromToken(token);
 
-            EmployeePrincipal employeePrincipal = new EmployeePrincipal(employeeId, firstName, role, employeeType, departmentId);
+            EmployeePrincipal employeePrincipal = new EmployeePrincipal(employeeId, firstName, role, employeeType, departmentId, companyId);
             var auth = new UsernamePasswordAuthenticationToken(employeePrincipal, null, employeePrincipal.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }

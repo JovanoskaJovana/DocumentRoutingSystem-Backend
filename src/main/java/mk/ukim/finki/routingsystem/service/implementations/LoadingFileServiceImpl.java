@@ -22,10 +22,10 @@ public class LoadingFileServiceImpl implements LoadingFileService {
 
     @Override
     @Transactional(readOnly = true)
-    public FileResource loadFile(Long documentId, Long versionId) {
+    public FileResource loadFile(Long documentId, Long versionId, Long companyId) {
 
 
-        DocumentVersion documentVersion = documentVersionRepository.findById(versionId)
+        DocumentVersion documentVersion = documentVersionRepository.findByIdAndDocument_Company_Id(versionId, companyId)
                 .orElseThrow(() -> new DocumentVersionNotFoundException("Document version not found"));
 
         if (!documentVersion.getDocument().getId().equals(documentId)) {

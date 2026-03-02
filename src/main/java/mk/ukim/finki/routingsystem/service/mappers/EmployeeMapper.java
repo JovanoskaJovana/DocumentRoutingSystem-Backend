@@ -13,6 +13,7 @@ public interface EmployeeMapper {
     @Mapping(target = "departmentId", source = "department.id")
     @Mapping(target = "employeeType", source = "type")
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "companyId", source = "company.id")
     CreateDisplayEmployeeDto toDto(Employee employee);
 
     // create a new Employee from employeeDto
@@ -21,6 +22,7 @@ public interface EmployeeMapper {
     @Mapping(target = "type",        source = "employeeType")
     @Mapping(target = "department",  ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "company.id", source = "companyId")
     Employee toNewEntity(CreateDisplayEmployeeDto createDisplayEmployeeDto);
 
 

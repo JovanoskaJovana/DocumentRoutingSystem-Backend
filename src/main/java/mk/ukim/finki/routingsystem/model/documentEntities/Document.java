@@ -2,6 +2,7 @@ package mk.ukim.finki.routingsystem.model.documentEntities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mk.ukim.finki.routingsystem.model.Company;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
@@ -20,7 +21,11 @@ public class Document {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String title;
+
+    @ManyToOne
+    private Company company;
 
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn (nullable = false)
@@ -50,6 +55,9 @@ public class Document {
 
     @Enumerated (EnumType.STRING)
     private DocumentStatus documentStatus;
+
+    @ElementCollection
+    private List<String> suggestedDepartments;
 
     public Document() {
     }

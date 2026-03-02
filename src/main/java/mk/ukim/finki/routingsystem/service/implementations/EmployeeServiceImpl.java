@@ -5,6 +5,7 @@ import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.dto.Employee.CreateDisplayEmployeeDto;
 import mk.ukim.finki.routingsystem.model.exceptions.DepartmentNotFoundException;
+import mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
 import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
 import mk.ukim.finki.routingsystem.service.EmployeeService;
@@ -33,30 +34,30 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
     @Override
-    public List<CreateDisplayEmployeeDto> listAll() {
+    public List<CreateDisplayEmployeeDto> listAll(Long companyId) {
 
-        return employeeRepository.findAll()
+        return employeeRepository.findAllByCompany_Id(companyId)
                 .stream().map(employeeMapper::toDto).toList();
 
     }
 
     @Override
-    public Optional<CreateDisplayEmployeeDto> findById(Long id) {
+    public Optional<CreateDisplayEmployeeDto> findById(Long id, Long companyId) {
       
-        return employeeRepository.findById(id)
+        return employeeRepository.findByIdAndCompany_Id(id, companyId)
                 .map(employeeMapper::toDto);
 
     }
 
     @Transactional
     @Override
-    public CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto) {
+    public CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto, Long companyId) {
 
         if (createDisplayEmployeeDto.departmentId() == null) {
             throw new DepartmentNotFoundException("Department ID is required");
         }
 
-        Optional <Department> department = departmentRepository.findById(createDisplayEmployeeDto.departmentId());
+        Optional <Department> department = departmentRepository.findByIdAndCompany_Id(createDisplayEmployeeDto.departmentId(), companyId);
         if (department.isEmpty()) {
             throw new DepartmentNotFoundException("Department not found");
         }
@@ -75,16 +76,16 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional
     @Override
-    public Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto) {
+    public Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto, Long companyId) {
 
-        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+        Optional<Employee> optionalEmployee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId);
         if (optionalEmployee.isEmpty()) {
             return Optional.empty();
         }
         Employee employee = optionalEmployee.get();
 
         if (createDisplayEmployeeDto.departmentId() != null) {
-            Optional <Department> department = departmentRepository.findById(createDisplayEmployeeDto.departmentId());
+            Optional <Department> department = departmentRepository.findByIdAndCompany_Id(createDisplayEmployeeDto.departmentId(), companyId);
             if (department.isEmpty()) {
                 return Optional.empty();
             }
@@ -105,13 +106,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional
     @Override
-    public boolean delete(Long employeeId) {
+    public boolean delete(Long employeeId, Long companyId) {
 
-        if (!employeeRepository.existsById(employeeId)) {
-            return false;
-        }
+        Employee employee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        employeeRepository.deleteById(employeeId);
+        employeeRepository.delete(employee);
         return true;
     }
 
