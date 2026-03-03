@@ -1,4 +1,4 @@
-# RoutingSystemApplication
+# Flowdesk Backend
 A Spring Boot application for managing document routing, approvals and version control within an organization. Employees can upload documents, which are automatically routed to the appropriate department, while the system maintains version history and allows signatory employees within the department to approve or reject them.
 
 ## Key Features
