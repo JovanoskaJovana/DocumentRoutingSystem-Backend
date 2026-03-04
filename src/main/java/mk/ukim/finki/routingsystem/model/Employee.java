@@ -32,7 +32,6 @@ public class Employee {
     private String lastName;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
     private Department department;
 
     @Enumerated(EnumType.STRING)

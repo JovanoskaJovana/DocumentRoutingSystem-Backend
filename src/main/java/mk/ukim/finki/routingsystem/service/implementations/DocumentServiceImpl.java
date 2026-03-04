@@ -4,6 +4,7 @@ import mk.ukim.finki.routingsystem.events.DocumentActionRequestedEvent;
 import mk.ukim.finki.routingsystem.model.Company;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
+import mk.ukim.finki.routingsystem.model.ManualReviewAction;
 import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
 import mk.ukim.finki.routingsystem.model.dto.Document.*;
@@ -47,8 +48,9 @@ public class DocumentServiceImpl implements DocumentService {
     private final DepartmentRepository departmentRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DocumentVersionRepository documentVersionRepository;
+    private final ManualReviewActionRepository manualReviewActionRepository;
 
-    public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMapper documentMapper, EmployeeRepository employeeRepository, DocumentVersionService documentVersionService, DocumentRouter documentRouter, CompanyRepository companyRepository, DocumentTextExtractor documentTextExtractor, DepartmentRepository departmentRepository, ApplicationEventPublisher applicationEventPublisher, DocumentVersionRepository documentVersionRepository) {
+    public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMapper documentMapper, EmployeeRepository employeeRepository, DocumentVersionService documentVersionService, DocumentRouter documentRouter, CompanyRepository companyRepository, DocumentTextExtractor documentTextExtractor, DepartmentRepository departmentRepository, ApplicationEventPublisher applicationEventPublisher, DocumentVersionRepository documentVersionRepository, ManualReviewActionRepository manualReviewActionRepository) {
         this.documentRepository = documentRepository;
         this.documentMapper = documentMapper;
         this.employeeRepository = employeeRepository;
@@ -59,6 +61,7 @@ public class DocumentServiceImpl implements DocumentService {
         this.departmentRepository = departmentRepository;
         this.applicationEventPublisher = applicationEventPublisher;
         this.documentVersionRepository = documentVersionRepository;
+        this.manualReviewActionRepository = manualReviewActionRepository;
     }
 
     @Override
@@ -235,6 +238,14 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
+        DocumentVersion documentVersion = documentVersionRepository.findByIdAndDocument_Company_Id(document.getCurrentDocumentVersion().getId(), companyId)
+                .orElseThrow(() -> new DocumentVersionNotFoundException("Document Version not found."));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found."));
+
+        TitleAndBody textData = documentTextExtractor.extractTitleAndBody(documentVersion.getFileData());
+
         if (document.getDocumentStatus() != DocumentStatus.FAILED_ROUTING) {
             throw new InvalidDocumentStateException("Only failed routing documents can be manually routed");
         }
@@ -251,6 +262,14 @@ public class DocumentServiceImpl implements DocumentService {
         document.setSuggestedDepartments(null);
         document.setDocumentStatus(DocumentStatus.ROUTED);
         documentRepository.save(document);
+
+        ManualReviewAction manualReviewAction = new ManualReviewAction();
+        manualReviewAction.setDocumentTitle(textData.title());
+        manualReviewAction.setDocumentText(textData.body());
+        manualReviewAction.setManualChosenDepartment(department);
+        manualReviewAction.setTimestamp(LocalDateTime.now());
+        manualReviewAction.setCompany(company);
+        manualReviewActionRepository.save(manualReviewAction);
 
         applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
                 document.getId(),
