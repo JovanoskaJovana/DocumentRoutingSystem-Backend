@@ -21,16 +21,17 @@ public class DocumentActionRestController {
     }
 
     @GetMapping("{documentId}/documentActions")
-    public ResponseEntity<List<DisplayDocumentActionDto>> getAllDocumentActions(@PathVariable Long documentId) {
+    public ResponseEntity<List<DisplayDocumentActionDto>> getAllDocumentActions(@PathVariable Long documentId,
+                                                                                @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        return ResponseEntity.ok(documentActionService.findAllForADocument(documentId));
+        return ResponseEntity.ok(documentActionService.findAllForADocument(documentId, employeePrincipal.getCompanyId()));
     }
 
     @GetMapping("/{documentId}/actionsByMe")
     public ResponseEntity<List<DisplayDocumentActionDto>> getAllActionsByEmployeeId(@PathVariable Long documentId,
                                                                                     @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-        return ResponseEntity.ok(documentActionService.findAllBySpecificEmployee(documentId, employeePrincipal.getEmployeeId()));
+        return ResponseEntity.ok(documentActionService.findAllBySpecificEmployee(documentId, employeePrincipal.getEmployeeId(), employeePrincipal.getCompanyId()));
     }
 
 }

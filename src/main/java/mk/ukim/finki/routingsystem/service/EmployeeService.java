@@ -7,14 +7,14 @@ import java.util.Optional;
 
 public interface EmployeeService {
 
-     List<CreateDisplayEmployeeDto> listAll();
+     List<CreateDisplayEmployeeDto> listAll(Long companyId);
 
-     Optional<CreateDisplayEmployeeDto> findById(Long id);
+     Optional<CreateDisplayEmployeeDto> findById(Long id, Long companyId);
   
-     CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto);
+     CreateDisplayEmployeeDto save(CreateDisplayEmployeeDto createDisplayEmployeeDto, Long companyId);
 
-     Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto);
+     Optional<CreateDisplayEmployeeDto> update(Long employeeId, CreateDisplayEmployeeDto createDisplayEmployeeDto, Long companyId);
 
-     boolean delete(Long employeeId);
+     boolean delete(Long employeeId, Long companyId);
 
 }

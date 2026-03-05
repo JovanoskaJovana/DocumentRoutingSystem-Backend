@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -30,13 +31,14 @@ public class JwtUtil {
         return this.key;
     }
 
-    public String generateToken(Long employeeId, String fullName, Role role, EmployeeType employeeType, Long departmentId) {
-        Map<String, Object> claims = Map.of(
-                "firstName", fullName,
-                "role", role.name(),
-                "employeeType", employeeType.name(),
-                "departmentId", departmentId
-        );
+    public String generateToken(Long employeeId, String fullName, Role role, EmployeeType employeeType, Long departmentId, Long company) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("firstName", fullName);
+        claims.put("role", role.name());
+        claims.put("employeeType", employeeType != null ? employeeType.name() : null);
+        claims.put("departmentId", departmentId);
+        claims.put("companyId", company);
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(employeeId.toString())
@@ -68,6 +70,10 @@ public class JwtUtil {
     public Long departmentIdFromToken(String token) {
         Object dept = verifyToken(token).get("departmentId");
         return dept == null ? null : Long.valueOf(dept.toString());
+    }
+    public Long companyFromToken(String token) {
+        Object company = verifyToken(token).get("companyId");
+        return company == null ? null : Long.valueOf(company.toString());
     }
 
 

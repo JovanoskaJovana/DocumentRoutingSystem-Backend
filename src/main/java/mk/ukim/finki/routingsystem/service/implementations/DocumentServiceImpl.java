@@ -1,26 +1,27 @@
 package mk.ukim.finki.routingsystem.service.implementations;
 
 import mk.ukim.finki.routingsystem.events.DocumentActionRequestedEvent;
+import mk.ukim.finki.routingsystem.model.Company;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
+import mk.ukim.finki.routingsystem.model.ManualReviewAction;
 import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
 import mk.ukim.finki.routingsystem.model.dto.Document.*;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.CreateDocumentVersionDto;
 import mk.ukim.finki.routingsystem.model.dto.DocumentVersion.DisplayDocumentVersionDto;
+import mk.ukim.finki.routingsystem.model.dto.Routing.RoutingDecision;
+import mk.ukim.finki.routingsystem.model.dto.Routing.TitleAndBody;
 import mk.ukim.finki.routingsystem.model.enumerations.ActionType;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.exceptions.*;
-import mk.ukim.finki.routingsystem.repository.DepartmentRepository;
-import mk.ukim.finki.routingsystem.repository.DocumentRepository;
-import mk.ukim.finki.routingsystem.repository.DocumentVersionRepository;
-import mk.ukim.finki.routingsystem.repository.EmployeeRepository;
+import mk.ukim.finki.routingsystem.repository.*;
 import mk.ukim.finki.routingsystem.service.DocumentService;
 import mk.ukim.finki.routingsystem.service.DocumentVersionService;
 import mk.ukim.finki.routingsystem.service.mappers.DocumentMapper;
-import mk.ukim.finki.routingsystem.service.rules.RoutingRules;
-import mk.ukim.finki.routingsystem.service.text.DocumentTextExtractor;
+import mk.ukim.finki.routingsystem.service.routing.rules.DocumentRouter;
+import mk.ukim.finki.routingsystem.service.routing.text.DocumentTextExtractor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,63 +41,68 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentMapper documentMapper;
     private final EmployeeRepository employeeRepository;
     private final DocumentVersionService documentVersionService;
+    private final DocumentRouter documentRouter;
+    private final CompanyRepository companyRepository;
 
     private final DocumentTextExtractor documentTextExtractor;
-    private final RoutingRules routingRules;
     private final DepartmentRepository departmentRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DocumentVersionRepository documentVersionRepository;
+    private final ManualReviewActionRepository manualReviewActionRepository;
 
-    public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMapper documentMapper, EmployeeRepository employeeRepository, DocumentVersionService documentVersionService, DocumentTextExtractor documentTextExtractor, RoutingRules routingRules, DepartmentRepository departmentRepository, ApplicationEventPublisher applicationEventPublisher, DocumentVersionRepository documentVersionRepository) {
+    public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMapper documentMapper, EmployeeRepository employeeRepository, DocumentVersionService documentVersionService, DocumentRouter documentRouter, CompanyRepository companyRepository, DocumentTextExtractor documentTextExtractor, DepartmentRepository departmentRepository, ApplicationEventPublisher applicationEventPublisher, DocumentVersionRepository documentVersionRepository, ManualReviewActionRepository manualReviewActionRepository) {
         this.documentRepository = documentRepository;
         this.documentMapper = documentMapper;
         this.employeeRepository = employeeRepository;
         this.documentVersionService = documentVersionService;
+        this.documentRouter = documentRouter;
+        this.companyRepository = companyRepository;
         this.documentTextExtractor = documentTextExtractor;
-        this.routingRules = routingRules;
         this.departmentRepository = departmentRepository;
         this.applicationEventPublisher = applicationEventPublisher;
         this.documentVersionRepository = documentVersionRepository;
+        this.manualReviewActionRepository = manualReviewActionRepository;
     }
 
     @Override
     @Transactional (readOnly = true)
-    public Page<DisplayDocumentDto> findAllByRoutedToDepartment(Long departmentId, Pageable pageable) {
-        return documentRepository.findAllByRoutedToDepartment_IdOrderByUploadDateTime(departmentId, pageable)
+    public Page<DisplayDocumentDto> findAllByRoutedToDepartment(Long departmentId, Long companyId, Pageable pageable) {
+        return documentRepository.findAllByRoutedToDepartment_IdAndCompany_IdOrderByUploadDateTime(departmentId, companyId, pageable)
                 .map(documentMapper::toDto);
     }
 
     @Override
     @Transactional
-    public Page<DisplayAdminDocumentDto> findAllByRoutedToDepartmentByAdmin(Long departmentId, Pageable pageable) {
-        return documentRepository.findAllByRoutedToDepartment_IdOrderByUploadDateTime(departmentId, pageable)
+    public Page<DisplayAdminDocumentDto> findAllByRoutedToDepartmentByAdmin(Long departmentId, Long companyId, Pageable pageable) {
+        return documentRepository.findAllByRoutedToDepartment_IdAndCompany_IdOrderByUploadDateTime(departmentId, companyId, pageable)
                 .map(documentMapper::toAdminDto);
     }
 
     @Override
     @Transactional (readOnly = true)
-    public Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable) {
-        return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_IdOrderByUploadDateTime(documentStatuses, employeeId, pageable)
+    public Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable) {
+        return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_IdAndCompany_IdOrderByUploadDateTime(documentStatuses, employeeId, companyId, pageable)
                 .map(documentMapper::toDto);
     }
 
     @Override
     @Transactional (readOnly = true)
-    public Page<DisplayDocumentDto> findAllUploadedByEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Pageable pageable) {
-        return documentRepository.findAllByDocumentStatusInAndUploadedByEmployee_IdOrderByUploadDateTime(documentStatuses, employeeId, pageable)
+    public Page<DisplayDocumentDto> findAllUploadedByEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable) {
+        return documentRepository.findAllByDocumentStatusInAndUploadedByEmployee_IdAndCompany_IdOrderByUploadDateTime(documentStatuses, employeeId, companyId, pageable)
                 .map(documentMapper::toDto);
     }
 
     @Override
     @Transactional (readOnly = true)
-    public DisplayDocumentDto findAllWithVersions(Long documentId) {
-        return documentRepository.findWithVersionsById(documentId).map(documentMapper::toDto)
+    public DisplayDocumentDto findAllWithVersions(Long documentId, Long companyId) {
+        return documentRepository.findWithVersionsByIdAndCompany_Id(documentId, companyId)
+                .map(documentMapper::toDto)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
     }
 
     @Override
     @Transactional
-    public DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId) throws IOException {
+    public DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId, Long companyId) throws IOException {
 
         if (file == null || file.isEmpty()) {
             throw new IOException("PDF file is required.");
@@ -107,11 +112,14 @@ public class DocumentServiceImpl implements DocumentService {
             throw new IOException("Authenticated employee id is missing.");
         }
 
-        Employee employee = employeeRepository.findById(uploaderId)
+        Employee employee = employeeRepository.findByIdAndCompany_Id(uploaderId, companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found."));
 
         Document document = new Document();
+        document.setCompany(company);
         document.setDocumentStatus(DocumentStatus.UPLOADED);
         document.setTitle(documentDto.title());
         document.setUploadedByEmployee(employee);
@@ -128,7 +136,7 @@ public class DocumentServiceImpl implements DocumentService {
                 file.getBytes()
         );
 
-        DisplayDocumentVersionDto documentVersion = documentVersionService.createAndSaveADocumentVersion(versionDto);
+        DisplayDocumentVersionDto documentVersion = documentVersionService.createAndSaveADocumentVersion(versionDto, companyId);
 
         document.setCurrentDocumentVersion(documentVersionRepository.getReferenceById(documentVersion.versionId()));
         documentRepository.save(document);
@@ -149,16 +157,21 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public DisplayDocumentDto routeDocument(Long documentId, Long employeeId) {
+    public DisplayDocumentDto routeDocument(Long documentId, Long employeeId, Long companyId) {
 
-        Document document = documentRepository.findById(documentId)
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
+
+        String tenantKey = company.getCode();
+
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
         if (document.getDocumentStatus() != DocumentStatus.UPLOADED) {
             throw new InvalidDocumentStateException("Only uploaded documents can be routed");
         }
 
-        DocumentStatus from = document.getDocumentStatus();
+        DocumentStatus fromStatus = document.getDocumentStatus();
 
         DocumentVersion documentVersion = document.getCurrentDocumentVersion();
         if (documentVersion == null || documentVersion.getId() == null) {
@@ -170,16 +183,37 @@ public class DocumentServiceImpl implements DocumentService {
             throw new DocumentVersionNotFoundException("No file to route.");
         }
 
-        TitleAndBody text = documentTextExtractor.extractTitleAndBody(documentVersion.getFileData());
-        RoutingResultDto resultDto = routingRules.routeToDepartmentAndEmployees(text);
+        TitleAndBody textData = documentTextExtractor.extractTitleAndBody(documentVersion.getFileData());
+        RoutingDecision routingDecision = documentRouter.route(tenantKey, textData);
 
-        boolean hasEmployees = resultDto != null && resultDto.routedToEmployees() != null && !resultDto.routedToEmployees().isEmpty();
-        boolean hasDepartment = resultDto != null && resultDto.departmentId() != null;
+        if (routingDecision.winner() != null) {
 
-        if (!hasEmployees && !hasDepartment) {
+            Department department = departmentRepository.findByDepartmentKeyAndCompany_Id(routingDecision.winner(), companyId)
+                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found."));
+
+            Set<Employee> signatories = employeeRepository.findAllByCompany_IdAndDepartment_IdAndType(companyId, department.getId(), EmployeeType.SIGNATORY);
+
+            document.setRoutedToEmployees(signatories);
+            document.setRoutedToDepartment(department);
+            document.setDocumentStatus(DocumentStatus.ROUTED);
+            documentRepository.save(document);
+
+            applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
+                    document.getId(),
+                    document.getCurrentDocumentVersion().getId(),
+                    employeeId,
+                    ActionType.ROUTED,
+                    fromStatus,
+                    DocumentStatus.ROUTED,
+                    LocalDateTime.now()
+            ));
+
+        } else {
+
             document.setRoutedToDepartment(null);
             document.getRoutedToEmployees().clear();
             document.setDocumentStatus(DocumentStatus.FAILED_ROUTING);
+            document.setSuggestedDepartments(routingDecision.tiedDepartments());
             documentRepository.save(document);
 
             applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
@@ -187,31 +221,62 @@ public class DocumentServiceImpl implements DocumentService {
                     documentVersion.getId(),
                     employeeId,
                     ActionType.FAILED_ROUTING,
-                    from,
+                    fromStatus,
                     DocumentStatus.FAILED_ROUTING,
                     LocalDateTime.now()
             ));
 
-            return documentMapper.toDto(document);
         }
 
-        Set<Employee> routedToEmployees = new HashSet<>(resultDto.routedToEmployees());
-        document.setRoutedToEmployees(routedToEmployees);
+        return documentMapper.toDto(document);
+    }
 
-        Department department = departmentRepository.findById(resultDto.departmentId())
-                        .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
+    @Transactional
+    @Override
+    public DisplayDocumentDto manualRouteDocument(Long documentId, Long employeeId, Long companyId, String departmentKey) {
 
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
+                .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
+
+        DocumentVersion documentVersion = documentVersionRepository.findByIdAndDocument_Company_Id(document.getCurrentDocumentVersion().getId(), companyId)
+                .orElseThrow(() -> new DocumentVersionNotFoundException("Document Version not found."));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found."));
+
+        TitleAndBody textData = documentTextExtractor.extractTitleAndBody(documentVersion.getFileData());
+
+        if (document.getDocumentStatus() != DocumentStatus.FAILED_ROUTING) {
+            throw new InvalidDocumentStateException("Only failed routing documents can be manually routed");
+        }
+
+        DocumentStatus fromStatus = document.getDocumentStatus();
+
+        Department department = departmentRepository.findByDepartmentKeyAndCompany_Id(departmentKey, companyId)
+                .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
+
+        Set<Employee> signatories = employeeRepository.findAllByCompany_IdAndDepartment_IdAndType(companyId, department.getId(), EmployeeType.SIGNATORY);
+
+        document.setRoutedToEmployees(signatories);
         document.setRoutedToDepartment(department);
+        document.setSuggestedDepartments(null);
         document.setDocumentStatus(DocumentStatus.ROUTED);
-
         documentRepository.save(document);
+
+        ManualReviewAction manualReviewAction = new ManualReviewAction();
+        manualReviewAction.setDocumentTitle(textData.title());
+        manualReviewAction.setDocumentText(textData.body());
+        manualReviewAction.setManualChosenDepartment(department);
+        manualReviewAction.setTimestamp(LocalDateTime.now());
+        manualReviewAction.setCompany(company);
+        manualReviewActionRepository.save(manualReviewAction);
 
         applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
                 document.getId(),
                 document.getCurrentDocumentVersion().getId(),
                 employeeId,
                 ActionType.ROUTED,
-                from,
+                fromStatus,
                 DocumentStatus.ROUTED,
                 LocalDateTime.now()
         ));
@@ -221,11 +286,12 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public boolean approveDocument(Long documentId, Long employeeId) {
-        Document document = documentRepository.findById(documentId)
+    public boolean approveDocument(Long documentId, Long employeeId, Long companyId) {
+
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
-        Employee employee = employeeRepository.findById(employeeId)
+        Employee employee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found."));
 
         boolean isSignatory = employee.getType().equals(EmployeeType.SIGNATORY);
@@ -252,12 +318,12 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public boolean rejectDocument(Long documentId, Long employeeId) {
+    public boolean rejectDocument(Long documentId, Long employeeId, Long companyId) {
 
-        Document document = documentRepository.findById(documentId)
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
-        Employee employee = employeeRepository.findById(employeeId)
+        Employee employee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found."));
 
         boolean isSignatory = employee.getType().equals(EmployeeType.SIGNATORY);
@@ -281,4 +347,6 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return false;
     }
+
+
 }

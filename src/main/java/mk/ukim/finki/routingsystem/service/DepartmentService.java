@@ -7,13 +7,15 @@ import java.util.Optional;
 
 public interface DepartmentService {
 
-    List<CreateDisplayDepartmentDto> listAll();
+    List<CreateDisplayDepartmentDto> listAll(Long companyId);
 
-    Optional<CreateDisplayDepartmentDto> findById(Long departmentId);
+    Optional<CreateDisplayDepartmentDto> findById(Long departmentId, Long companyId);
 
-    CreateDisplayDepartmentDto save(CreateDisplayDepartmentDto createDisplayDepartmentDto);
+    CreateDisplayDepartmentDto save(CreateDisplayDepartmentDto createDisplayDepartmentDto, Long companyId);
 
-    Optional<CreateDisplayDepartmentDto> update(Long departmentId, CreateDisplayDepartmentDto createDisplayDepartmentDto);
+    Optional<CreateDisplayDepartmentDto> update(Long companyId, Long departmentId, CreateDisplayDepartmentDto createDisplayDepartmentDto);
 
-    boolean delete(Long departmentId);
+    List<CreateDisplayDepartmentDto> getManualReviewDepartments(Long documentId, Long companyId);
+
+    boolean delete(Long companyId, Long departmentId);
 }

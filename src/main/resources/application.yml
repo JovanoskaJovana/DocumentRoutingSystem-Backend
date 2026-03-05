@@ -1,79 +1,93 @@
 app:
   routing:
-    # when no rules match use the admin departmentId
-    admin-dept-id: 1
+    tenants:
+      PTR:
+        admin-dept-key: ADMIN
+        departments:
+          FN:
+            strong: [ "invoice number", "expense report", "purchase order",
+                      "bank transfer", "vat", "balance sheet", "statement of account" ]
 
-    min-matches:
-      "103": 3   # Finance
-      "104": 3   # Legal
-      "105": 2   # HR
-      "52": 2   # IT
+            weak: [ "finance", "invoice", "payment", "receipt", "billing", "cash flow",
+                    "income", "expense", "refund", "budget", "revenue", "audit",
+                    "liability", "advance", "loss", "profit", "accounting" ]
 
-    # map: departmentId -> list of keywords
-    # case-sensitive, word-matched
-    keyword-rules:
-      "103": [
-        "invoice", "payment", "finance", "receipt",
-        "billing", "statement", "credit note", "debit note",
-        "audit", "tax", "vat", "supplier", "vendor",
-        "purchase order", "po number", "reconciliation", "expense",
-        "debit", "credit", "ledger", "journal", "bank transfer",
-        "cheque", "refund", "prepayment", "advance", "cost centre",
-        "expense report", "payroll", "budget", "forecast",
-        "asset", "liability", "equity", "depreciation", "amortisation",
-        "invoice number", "due date", "remittance", "financial year",
-        "fiscal", "reimbursement", "balance sheet", "profit", "loss",
-        "accounting", "cash flow", "income", "revenue", "statement of account"
-      ]
+            negative: [ "agreement", "terms", "employment", "vacation", "onboarding",
+                        "bug", "system" ]
 
-      "104": [
-        "contract", "agreement", "legal",
-        "terms and conditions", "clause", "appendix", "amendment", "addendum",
-        "confidentiality", "nda", "liability", "indemnity", "jurisdiction",
-        "governing law", "termination", "signatory", "signature",
-        "effective date", "breach", "remedy", "dispute", "arbitration",
-        "waiver", "assignment", "covenant", "warranty", "guarantee",
-        "obligation", "performance", "deliverable", "milestone",
-        "scope of work", "sow", "statement of work", "subcontractor",
-        "vendor", "supplier", "licensor", "licensee", "intellectual property",
-        "copyright", "trademark", "patent", "privacy", "compliance",
-        "regulatory", "audit", "risk", "governance", "policy",
-        "statute", "master agreement", "service level agreement", "sla",
-        "conflict of interest", "penalty", "damages", "court", "law firm"
-      ]
+          LG:
+            strong: [ "terms and conditions", "service level agreement",
+                      "nda", "intellectual property", "governing law", "jurisdiction" ]
 
-      "105": [
-        "employee", "vacation", "leave", "hr",
-        "onboarding", "offboarding", "termination", "resignation",
-        "dismissal", "disciplinary", "grievance", "performance review",
-        "promotion", "demotion", "salary adjustment", "benefits",
-        "bonus", "employment agreement", "job description", "timesheet",
-        "working hours", "overtime", "absence", "sick leave",
-        "annual leave", "parental leave", "maternity leave", "paternity leave",
-        "sabbatical", "unpaid leave", "holiday", "vacation request",
-        "return to work", "exit interview", "relocation", "training",
-        "development", "succession planning", "health", "safety",
-        "hr policy", "handbook", "code of conduct", "employment law",
-        "background check", "probation", "full and final settlement",
-        "insurance", "attendance", "payslip", "recruitment", "interview",
-        "evaluation", "motivation", "team building", "wellness", "discipline"
-      ]
+            weak: [ "legal", "contract", "agreement", "assignment", "covenant", "warranty",
+                    "guarantee", "conflict of interest", "penalty", "damages", "court",
+                    "law firm", "termination", "clause", "effective date", "privacy",
+                    "trademark" ]
 
-      "52": [
-        "incident", "bug", "system", "ticket", "it",
-        "outage", "downtime", "support request", "priority", "severity",
-        "root cause", "troubleshooting", "resolution", "change request",
-        "patch", "upgrade", "system failure", "error", "defect",
-        "vulnerability", "security incident", "breach", "access issue",
-        "login failure", "password reset", "authentication", "authorization",
-        "firewall", "network", "server", "database", "cloud",
-        "software update", "version control", "deployment", "rollback",
-        "backup", "restore", "disaster recovery", "incident response",
-        "monitoring", "alert", "user issue", "helpdesk", "support desk",
-        "configuration", "system maintenance", "asset management",
-        "workstation", "device", "endpoint", "malware", "phishing",
-        "cyberattack", "encryption", "data breach", "ITIL", "sla"
-      ]
+            negative: [ "leave", "invoice", "ticket", "vat" ]
+
+          HR:
+            strong: [ "vacation request", "vacation leave", "unpaid leave", "annual leave",
+                      "payslip", "exit interview", "onboarding", "resignation" ]
+
+            weak: [ "hr", "employment", "handbook", "code of conduct", "background check",
+                    "probation", "parental leave", "maternity leave", "paternity leave",
+                    "recruitment", "interview", "team building", "holiday" ]
+
+            negative: [ "incident", "contract", "nda", "invoice", "expense" ]
+
+          IT:
+            strong: [ "security incident", "vulnerability", "password reset", "login failure",
+                      "malware", "phishing", "system outage", "data breach" ]
+
+            weak: [ "bug", "ticket", "outage", "downtime", "support request", "priority", "severity",
+                    "authentication", "authorization", "cyberattack", "encryption",
+                    "firewall", "network", "server", "database", "cloud",
+                    "access issue", "system maintenance", "software update", "rollback" ]
+
+      company2:
+        admin-dept-key: ADMIN
+        departments:
+          FINANCE:
+            strong: [ "invoice number", "expense report", "purchase order",
+                      "bank transfer", "vat", "balance sheet", "statement of account" ]
+
+            weak: [ "finance", "invoice", "payment", "receipt", "billing", "cash flow",
+                    "income", "expense", "refund", "budget", "revenue", "audit",
+                    "liability", "advance", "loss", "profit", "accounting" ]
+
+            negative: [ "agreement", "terms", "employment", "vacation", "onboarding",
+                        "bug", "system" ]
+
+          LEGAL:
+            strong: [ "terms and conditions", "service level agreement",
+                      "nda", "intellectual property", "governing law", "jurisdiction" ]
+
+            weak: [ "legal", "contract", "agreement", "assignment", "covenant", "warranty",
+                    "guarantee", "conflict of interest", "penalty", "damages", "court",
+                    "law firm", "termination", "clause", "effective date", "privacy",
+                    "trademark" ]
+
+            negative: [ "leave", "invoice", "ticket", "vat" ]
+
+          HR:
+            strong: [ "vacation request", "vacation leave", "unpaid leave", "annual leave",
+                      "payslip", "exit interview", "onboarding", "resignation" ]
+
+            weak: [ "hr", "employment", "handbook", "code of conduct", "background check",
+                    "probation", "parental leave", "maternity leave", "paternity leave",
+                    "recruitment", "interview", "team building", "holiday" ]
+
+            negative: [ "incident", "contract", "nda", "invoice", "expense" ]
+
+          IT:
+            strong: [ "security incident", "vulnerability", "password reset", "login failure",
+                      "malware", "phishing", "system outage", "data breach" ]
+
+            weak: [ "bug", "ticket", "outage", "downtime", "support request", "priority", "severity",
+                    "authentication", "authorization", "cyberattack", "encryption",
+                    "firewall", "network", "server", "database", "cloud",
+                    "access issue", "system maintenance", "software update", "rollback" ]
 
 
 jwt:

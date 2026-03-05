@@ -10,9 +10,9 @@ import java.util.List;
 public interface DocumentActionRepository extends JpaRepository<DocumentAction, Long> {
 
     // lists all the actions made on a document
-    List<DocumentAction> findByDocument_IdOrderByActionDateTime(Long documentId);
+    List<DocumentAction> findByDocument_IdAndDocument_Company_IdOrderByActionDateTime(Long documentId, Long companyId);
 
     // lists all the actions made by a specific employee
-    List<DocumentAction> findByDocument_IdAndPerformedByEmployee_IdOrderByActionDateTime(Long documentId, Long performedByEmployeeId);
+    List<DocumentAction> findByDocument_IdAndPerformedByEmployee_IdAndDocument_Company_IdOrderByActionDateTime(Long documentId, Long performedByEmployeeId, Long companyId);
 
 }

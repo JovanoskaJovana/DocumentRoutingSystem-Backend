@@ -1,4 +1,4 @@
-package mk.ukim.finki.routingsystem.model.dto.Document;
+package mk.ukim.finki.routingsystem.model.dto.Routing;
 
 
 public record TitleAndBody(

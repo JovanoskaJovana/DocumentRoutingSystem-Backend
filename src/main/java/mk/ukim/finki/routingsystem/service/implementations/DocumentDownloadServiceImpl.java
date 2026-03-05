@@ -40,30 +40,30 @@ public class DocumentDownloadServiceImpl implements DocumentDownloadService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DisplayDocumentDownloadDto> findAllDownloadsByEmployee(Long employeeId) {
-        return documentDownloadRepository.findAllByEmployee_IdOrderByDownloadDateTimeDesc(employeeId)
+    public List<DisplayDocumentDownloadDto> findAllDownloadsByEmployee(Long employeeId, Long companyId) {
+        return documentDownloadRepository.findAllByEmployee_IdAndDocument_Company_IdOrderByDownloadDateTimeDesc(employeeId, companyId)
                 .stream().map(documentDownloadMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DisplayDocumentDownloadDto> findAllDownloadsByDocument(Long documentId) {
-        return documentDownloadRepository.findAllByDocument_Id(documentId)
+    public List<DisplayDocumentDownloadDto> findAllDownloadsByDocument(Long documentId, Long companyId) {
+        return documentDownloadRepository.findAllByDocument_IdAndDocument_Company_Id(documentId, companyId)
                 .stream().map(documentDownloadMapper::toDto).toList();
     }
 
     @Override
-    public DisplayDocumentDownloadDto saveAndCreate(CreateDocumentDownloadDto createDocumentDownloadDto) {
+    public DisplayDocumentDownloadDto saveAndCreate(CreateDocumentDownloadDto createDocumentDownloadDto, Long companyId) {
 
-        Document document = documentRepository.findById(createDocumentDownloadDto.documentId())
+        Document document = documentRepository.findByIdAndAndCompany_Id(createDocumentDownloadDto.documentId(), companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         Long versionId = createDocumentDownloadDto.versionId();
 
-        DocumentVersion version = documentVersionRepository.findById(versionId)
+        DocumentVersion version = documentVersionRepository.findByIdAndDocument_Company_Id(versionId, companyId)
                 .orElseThrow(() -> new DocumentVersionNotFoundException("Document version not found"));
 
-        Employee employee = employeeRepository.findById(createDocumentDownloadDto.employeeId())
+        Employee employee = employeeRepository.findByIdAndCompany_Id(createDocumentDownloadDto.employeeId(), companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         DocumentDownload documentDownload = new DocumentDownload();

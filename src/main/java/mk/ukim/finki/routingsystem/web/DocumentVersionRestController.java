@@ -26,9 +26,10 @@ public class DocumentVersionRestController {
 
     @GetMapping("{documentId}/allVersions")
     public ResponseEntity<Page<DisplayDocumentVersionDto>> getAllVersions(@PathVariable Long documentId,
+                                                                   @AuthenticationPrincipal EmployeePrincipal employeePrincipal,
                                                                    Pageable pageable) {
 
-        Page<DisplayDocumentVersionDto> displayDocumentVersionDto = documentVersionService.listAllVersionsOfADocument(documentId, pageable);
+        Page<DisplayDocumentVersionDto> displayDocumentVersionDto = documentVersionService.listAllVersionsOfADocument(documentId, employeePrincipal.getCompanyId(), pageable);
 
         return ResponseEntity.ok(displayDocumentVersionDto);
     }
@@ -50,13 +51,14 @@ public class DocumentVersionRestController {
                 fileData
         );
 
-        DisplayDocumentVersionDto documentVersionDto = documentVersionService.updateAndSaveDocumentVersion(documentId, updateDocumentAndVersionDto);
+        DisplayDocumentVersionDto documentVersionDto = documentVersionService.updateAndSaveDocumentVersion(documentId, updateDocumentAndVersionDto, employeePrincipal.getCompanyId());
 
         return ResponseEntity.ok(documentVersionDto);
     }
 
     @GetMapping("version/{versionId}")
-    public ResponseEntity<DisplayDocumentVersionDto> getDocumentVersion(@PathVariable Long versionId) {
-        return ResponseEntity.ok(documentVersionService.getDocumentVersion(versionId));
+    public ResponseEntity<DisplayDocumentVersionDto> getDocumentVersion(@PathVariable Long versionId,
+                                                                        @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
+        return ResponseEntity.ok(documentVersionService.getDocumentVersion(versionId, employeePrincipal.getCompanyId()));
     }
 }

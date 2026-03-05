@@ -4,6 +4,7 @@ import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException;
 import mk.ukim.finki.routingsystem.repository.DocumentRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 @Component("documentAuth")
@@ -15,15 +16,13 @@ public class DocumentAuth {
         this.documentRepository = documentRepository;
     }
 
-    public boolean canSign(Long documentId, Object principalObj) {
+    public boolean canSign(Long documentId, Long companyId, Authentication authentication) {
 
-        EmployeePrincipal principal = extractPrincipal(principalObj);
-
-        if (principal == null) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof EmployeePrincipal employeePrincipal)) {
             return false;
         }
 
-        Document document = documentRepository.findById(documentId)
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
 
         if (document == null) {
@@ -31,19 +30,13 @@ public class DocumentAuth {
         }
 
         boolean sameDepartment = document.getRoutedToDepartment() != null &&
-                principal.getDepartmentId() != null &&
-                document.getRoutedToDepartment().getId().equals(principal.getDepartmentId());
+                employeePrincipal.getDepartmentId() != null &&
+                document.getRoutedToDepartment().getId().equals(employeePrincipal.getDepartmentId());
 
-        boolean isSignatory = principal.getEmployeeType() == EmployeeType.SIGNATORY;
+        boolean isSignatory = employeePrincipal.getEmployeeType() == EmployeeType.SIGNATORY;
 
         return sameDepartment && isSignatory;
     }
 
-    private EmployeePrincipal extractPrincipal(Object principalObj) {
-        if (principalObj instanceof EmployeePrincipal ep) return ep;
-        if (principalObj instanceof org.springframework.security.core.Authentication auth
-                && auth.getPrincipal() instanceof EmployeePrincipal ep) return ep;
-        return null;
-    }
 }
 

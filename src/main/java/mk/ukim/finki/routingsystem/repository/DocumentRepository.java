@@ -17,19 +17,21 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
      // lists all the documents routed to the same department as the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByRoutedToDepartment_IdOrderByUploadDateTime(Long departmentId, Pageable pageable);
+     Page<Document> findAllByRoutedToDepartment_IdAndCompany_IdOrderByUploadDateTime(Long departmentId, Long companyId, Pageable pageable);
 
      // lists all the documents routed directly to the logged-in employee - only load current version
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByDocumentStatusInAndRoutedToEmployees_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
+     Page<Document> findAllByDocumentStatusInAndRoutedToEmployees_IdAndCompany_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Long companyId, Pageable pageable);
 
      @EntityGraph(attributePaths = {"currentDocumentVersion"})
-     Page<Document> findAllByDocumentStatusInAndUploadedByEmployee_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Pageable pageable);
+     Page<Document> findAllByDocumentStatusInAndUploadedByEmployee_IdAndCompany_IdOrderByUploadDateTime(List<DocumentStatus> statuses, Long employeeId, Long companyId, Pageable pageable);
 
      // loads a document together with its full history - current + all versions
      @EntityGraph(attributePaths = {"currentDocumentVersion", "allDocumentVersions"})
-     Optional<Document> findWithVersionsById(Long id);
+     Optional<Document> findWithVersionsByIdAndCompany_Id(Long id, Long companyId);
      // findWithVersionsById fixes overriding findById
+
+     Optional<Document> findByIdAndAndCompany_Id(Long id, Long companyId);
 
 }
  

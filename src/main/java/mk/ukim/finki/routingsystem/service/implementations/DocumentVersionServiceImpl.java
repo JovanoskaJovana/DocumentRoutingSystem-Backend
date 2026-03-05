@@ -42,19 +42,19 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     @Override
     @Transactional (readOnly = true)
-    public Page<DisplayDocumentVersionDto> listAllVersionsOfADocument(Long documentId, Pageable pageable) {
-        return documentVersionRepository.findByDocument_IdOrderByVersionNumberDesc(documentId, pageable)
+    public Page<DisplayDocumentVersionDto> listAllVersionsOfADocument(Long documentId, Long companyId, Pageable pageable) {
+        return documentVersionRepository.findByDocument_IdAndDocument_Company_IdOrderByVersionNumberDesc(documentId, companyId, pageable)
                 .map(documentVersionMapper::toDto);
     }
 
     @Override
     @Transactional
-    public DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto) {
+    public DisplayDocumentVersionDto createAndSaveADocumentVersion(CreateDocumentVersionDto createDocumentVersionDto, Long companyId) {
 
-        Employee employee = employeeRepository.findById(createDocumentVersionDto.editedByEmployee())
+        Employee employee = employeeRepository.findByIdAndCompany_Id(createDocumentVersionDto.editedByEmployee(), companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
-        Document document = documentRepository.findById(createDocumentVersionDto.documentId())
+        Document document = documentRepository.findByIdAndAndCompany_Id(createDocumentVersionDto.documentId(), companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         DocumentVersion documentVersion = new DocumentVersion();
@@ -73,23 +73,23 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     @Override
     @Transactional
-    public DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto){
+    public DisplayDocumentVersionDto updateAndSaveDocumentVersion(Long documentId, UpdateDocumentAndVersionDto updateDto, Long companyId){
 
-        Document document = documentRepository.findById(documentId)
+        Document document = documentRepository.findByIdAndAndCompany_Id(documentId, companyId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found"));
 
         DocumentVersion currentVersion = document.getCurrentDocumentVersion();
 
         DocumentStatus from = document.getDocumentStatus();
 
-        DocumentVersion documentVersion = documentVersionRepository.findById(currentVersion.getId())
+        DocumentVersion documentVersion = documentVersionRepository.findByIdAndDocument_Company_Id(currentVersion.getId(), companyId)
                 .orElseThrow(() -> new DocumentVersionNotFoundException("Version for document is not found"));
 
         boolean newFile = updateDto.fileData() != null && updateDto.fileData().length > 0;
 
         DocumentVersion nextVersion = new DocumentVersion();
 
-        if (newFile && updateDto.changeNote() == null || updateDto.changeNote().isBlank()) {
+        if (newFile && (updateDto.changeNote() == null || updateDto.changeNote().isBlank())) {
             throw new RequiredChangeNoteException("Change Note is required when uploading a new file");
         }
         if (updateDto.editedByEmployeeId() == null) {
@@ -111,7 +111,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             nextVersion.setFileData(documentVersion.getFileData());
         }
 
-        Employee employee = employeeRepository.findById(updateDto.editedByEmployeeId())
+        Employee employee = employeeRepository.findByIdAndCompany_Id(updateDto.editedByEmployeeId(), companyId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         nextVersion.setUploadedByEmployee(employee);
@@ -140,8 +140,10 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
-    public DisplayDocumentVersionDto getDocumentVersion(Long documentVersionId) {
-        return documentVersionRepository.findById(documentVersionId).map(documentVersionMapper::toDto).orElseThrow(() -> new DocumentVersionNotFoundException("Document version not found"));
+    public DisplayDocumentVersionDto getDocumentVersion(Long documentVersionId, Long companyId) {
+        return documentVersionRepository.findByIdAndDocument_Company_Id(documentVersionId, companyId)
+                .map(documentVersionMapper::toDto)
+                .orElseThrow(() -> new DocumentVersionNotFoundException("Document version not found"));
 
     }
 }

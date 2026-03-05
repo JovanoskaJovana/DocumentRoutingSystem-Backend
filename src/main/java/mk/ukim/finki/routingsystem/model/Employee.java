@@ -45,6 +45,9 @@ public class Employee {
     @ManyToMany(mappedBy = "routedToEmployees")
     private List <Document> documents = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Company company;
+
     public Employee() {
     }
 
