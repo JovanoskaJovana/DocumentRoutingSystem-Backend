@@ -63,6 +63,9 @@ public class Document {
   @ElementCollection
   private List<String> suggestedDepartments;
 
+  @Version
+  private Long version;
+
   public Document() {
   }
 

@@ -1,5 +1,6 @@
 package mk.ukim.finki.routingsystem.model.exceptions;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -63,6 +64,21 @@ public class GlobalExceptionHandler {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+  }
+
+  /**
+   * Handles concurrent modification of the same resource, e.g. two signatories
+   * approving and rejecting the same document at the same time.
+   *
+   * @param ex the thrown exception
+   * @return 409 Conflict with a message asking the client to reload and retry
+   */
+  @ExceptionHandler(OptimisticLockingFailureException.class)
+  public ResponseEntity<ErrorResponse> handleOptimisticLock(OptimisticLockingFailureException ex) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(new ErrorResponse(HttpStatus.CONFLICT.value(),
+                    "This resource was modified by another user. Please reload and try again."));
   }
 
   /**
