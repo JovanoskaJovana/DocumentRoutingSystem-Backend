@@ -3,6 +3,9 @@ package mk.ukim.finki.routingsystem.web;
 import mk.ukim.finki.routingsystem.model.Company;
 import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
+import mk.ukim.finki.routingsystem.model.documentEntities.Document;
+import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
+import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
 import mk.ukim.finki.routingsystem.repository.*;
@@ -20,21 +23,26 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Checks how unexpected errors are reported.
+ * Checks how unexpected errors and unreadable PDFs are reported.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -62,6 +70,12 @@ class ErrorHandlingIT {
   private DepartmentRepository departmentRepository;
   @Autowired
   private EmployeeRepository employeeRepository;
+  @Autowired
+  private DocumentRepository documentRepository;
+  @Autowired
+  private DocumentVersionRepository documentVersionRepository;
+  @Autowired
+  private TransactionTemplate transactionTemplate;
 
   private Company company;
   private Department department;
@@ -95,6 +109,40 @@ class ErrorHandlingIT {
             .contains("Unexpected error on GET /test/boom")
             .contains("java.lang.IllegalStateException: boom")
             .contains("at mk.ukim.finki.routingsystem.web.ErrorHandlingIT$BoomController.boom");
+  }
+
+  @Test
+  void routingADamagedPdfReturns422AndKeepsTheDocumentUploaded() throws Exception {
+    Long documentId = createDocument(DocumentStatus.UPLOADED, "this is not a pdf".getBytes());
+
+    mockMvc.perform(put("/api/documents/{id}/route", documentId).header("Authorization", token))
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(jsonPath("$.message").value("The PDF file is damaged."));
+
+    assertThat(documentRepository.findById(documentId).orElseThrow().getDocumentStatus())
+            .isEqualTo(DocumentStatus.UPLOADED);
+  }
+
+  private Long createDocument(DocumentStatus status, byte[] fileData) {
+    return transactionTemplate.execute(tx -> {
+      Document document = new Document();
+      document.setTitle("Error document " + UUID.randomUUID());
+      document.setCompany(company);
+      document.setUploadedByEmployee(signatory);
+      document.setUploadDateTime(LocalDateTime.now());
+      document.setRoutedToDepartment(department);
+      document.setRoutedToEmployees(new HashSet<>(Set.of(signatory)));
+      document.setDocumentStatus(status);
+      documentRepository.save(document);
+
+      DocumentVersion version = new DocumentVersion(document, 1, "file.pdf", fileData,
+              "No made changes.", signatory, LocalDateTime.now());
+      documentVersionRepository.save(version);
+
+      document.setCurrentDocumentVersion(version);
+      documentRepository.save(document);
+      return document.getId();
+    });
   }
 
   @TestConfiguration

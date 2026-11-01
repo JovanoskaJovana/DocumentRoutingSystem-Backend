@@ -70,6 +70,19 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles documents whose file cannot be read: missing, password-protected or damaged.
+   *
+   * @param ex the thrown exception
+   * @return 422 Unprocessable Entity with the exception message in the response body
+   */
+  @ExceptionHandler(UnreadableDocumentException.class)
+  public ResponseEntity<ErrorResponse> handleUnreadableDocument(UnreadableDocumentException ex) {
+    return ResponseEntity
+            .status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
+  }
+
+  /**
    * Handles concurrent modification of the same resource, e.g. two signatories
    * approving and rejecting the same document at the same time.
    *
