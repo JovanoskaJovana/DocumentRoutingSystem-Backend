@@ -9,6 +9,7 @@ import mk.ukim.finki.routingsystem.model.enumerations.ActionType;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
+import mk.ukim.finki.routingsystem.model.exceptions.DocumentAlreadyDecidedException;
 import mk.ukim.finki.routingsystem.repository.*;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,7 +114,7 @@ class DocumentApproveRejectRaceIT {
         Outcome rejectOutcome = reject.get(30, TimeUnit.SECONDS);
 
         int successes = (approveOutcome.succeeded() ? 1 : 0) + (rejectOutcome.succeeded() ? 1 : 0);
-        int optimisticFailures = (approveOutcome.optimisticLockFailure() ? 1 : 0) + (rejectOutcome.optimisticLockFailure() ? 1 : 0);
+        int conflicts = (approveOutcome.conflict() ? 1 : 0) + (rejectOutcome.conflict() ? 1 : 0);
 
         // The action listener is @Async and AFTER_COMMIT: wait for every successful call to be recorded,
         // then hold briefly so a late extra record is not missed.
@@ -127,11 +128,11 @@ class DocumentApproveRejectRaceIT {
                 : null;
 
         String tag = "iteration " + i + " (approve=" + approveOutcome + ", reject=" + rejectOutcome + ")";
-        System.out.printf("[race] %s -> successes=%d, optimisticLockFailures=%d, finalStatus=%s, approvedOrRejectedActions=%d%n",
-                tag, successes, optimisticFailures, finalStatus, actionCount);
+        System.out.printf("[race] %s -> successes=%d, conflicts=%d, finalStatus=%s, approvedOrRejectedActions=%d%n",
+                tag, successes, conflicts, finalStatus, actionCount);
 
         softly.assertThat(successes).as("%s: number of successful calls", tag).isEqualTo(1);
-        softly.assertThat(optimisticFailures).as("%s: number of optimistic locking failures", tag).isEqualTo(1);
+        softly.assertThat(conflicts).as("%s: number of calls rejected as a conflict", tag).isEqualTo(1);
         softly.assertThat(finalStatus).as("%s: final status must match the single winner", tag).isEqualTo(expectedStatus);
         softly.assertThat(actionCount).as("%s: APPROVED/REJECTED action records", tag).isEqualTo(1L);
       }
@@ -142,11 +143,12 @@ class DocumentApproveRejectRaceIT {
     softly.assertAll();
   }
 
-  private Outcome race(CountDownLatch ready, CountDownLatch start, Callable<Boolean> call) throws InterruptedException {
+  private Outcome race(CountDownLatch ready, CountDownLatch start, Runnable call) throws InterruptedException {
     ready.countDown();
     start.await();
     try {
-      return new Outcome(call.call(), null);
+      call.run();
+      return new Outcome(true, null);
     } catch (Exception e) {
       return new Outcome(null, e);
     }
@@ -193,8 +195,11 @@ class DocumentApproveRejectRaceIT {
       return error == null && Boolean.TRUE.equals(result);
     }
 
-    boolean optimisticLockFailure() {
-      return error instanceof OptimisticLockingFailureException;
+    // The loser either collides on the write (optimistic lock) or arrives after the winner committed
+    // and sees the decided status. Both end as 409 for the user, so both count.
+    boolean conflict() {
+      return error instanceof OptimisticLockingFailureException
+              || error instanceof DocumentAlreadyDecidedException;
     }
 
     @Override

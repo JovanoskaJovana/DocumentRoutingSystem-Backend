@@ -70,6 +70,19 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handles approving or rejecting a document that was already approved or rejected.
+   *
+   * @param ex the thrown exception
+   * @return 409 Conflict with the exception message in the response body
+   */
+  @ExceptionHandler(DocumentAlreadyDecidedException.class)
+  public ResponseEntity<ErrorResponse> handleAlreadyDecided(DocumentAlreadyDecidedException ex) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+  }
+
+  /**
    * Handles documents whose file cannot be read: missing, password-protected or damaged.
    *
    * @param ex the thrown exception

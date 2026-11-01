@@ -117,11 +117,13 @@ public interface DocumentService {
    * @param documentId the id of the given document
    * @param employeeId the id of the employee that approves the document
    * @param companyId  the id of the given company
-   * @return true if the document status is changed to Approved, false otherwise
-   * @throws mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException if the given id of the employee is not found
-   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException if the given id of the document is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException       if the given id of the employee is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException       if the given id of the document is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentAlreadyDecidedException if the document was already approved or rejected
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.InvalidDocumentStateException   if the document is not routed
+   * @throws org.springframework.security.access.AccessDeniedException                   if the employee is not a signatory
    */
-  boolean approveDocument(Long documentId, Long employeeId, Long companyId);
+  void approveDocument(Long documentId, Long employeeId, Long companyId);
 
   /**
    * Rejects a document within a company.
@@ -129,9 +131,11 @@ public interface DocumentService {
    * @param documentId the id of the given document
    * @param employeeId the id of the employee that rejects the document
    * @param companyId  the id of the given company
-   * @return true if the document status is changed to Rejected, false otherwise
-   * @throws mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException if the given id of the employee is not found
-   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException if the given id of the document is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.EmployeeNotFoundException       if the given id of the employee is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentNotFoundException       if the given id of the document is not found
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.DocumentAlreadyDecidedException if the document was already approved or rejected
+   * @throws mk.ukim.finki.routingsystem.model.exceptions.InvalidDocumentStateException   if the document is not routed
+   * @throws org.springframework.security.access.AccessDeniedException                   if the employee is not a signatory
    */
-  boolean rejectDocument(Long documentId, Long employeeId, Long companyId);
+  void rejectDocument(Long documentId, Long employeeId, Long companyId);
 }

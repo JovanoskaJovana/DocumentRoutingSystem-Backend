@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Checks how unexpected errors and unreadable PDFs are reported.
+ * Checks how unexpected errors, unreadable PDFs and already-decided documents are reported.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -121,6 +121,15 @@ class ErrorHandlingIT {
 
     assertThat(documentRepository.findById(documentId).orElseThrow().getDocumentStatus())
             .isEqualTo(DocumentStatus.UPLOADED);
+  }
+
+  @Test
+  void approvingAnAlreadyApprovedDocumentReturns409() throws Exception {
+    Long documentId = createDocument(DocumentStatus.APPROVED, new byte[]{1, 2, 3});
+
+    mockMvc.perform(put("/api/documents/{id}/approve", documentId).header("Authorization", token))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("This document was already approved."));
   }
 
   private Long createDocument(DocumentStatus status, byte[] fileData) {
