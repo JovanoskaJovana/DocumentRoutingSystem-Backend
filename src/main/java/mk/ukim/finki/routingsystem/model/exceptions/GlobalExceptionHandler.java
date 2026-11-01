@@ -1,5 +1,7 @@
 package mk.ukim.finki.routingsystem.model.exceptions;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
  * appropriate HTTP responses with a consistent {@link ErrorResponse} body.
  */
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -96,12 +99,15 @@ public class GlobalExceptionHandler {
 
   /**
    * Fallback handler for all unhandled exceptions.
+   * Logs the request and the full stack trace, but returns only a generic message to the client.
    *
-   * @param ex the thrown exception
+   * @param ex      the thrown exception
+   * @param request the request that caused the exception
    * @return 500 Internal Server Error with a generic error message
    */
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+  public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
+    log.error("Unexpected error on {} {}", request.getMethod(), request.getRequestURI(), ex);
     return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
