@@ -106,7 +106,7 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   @Override
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId, Long companyId) throws IOException {
 
     if (file == null || file.isEmpty()) {

@@ -5,11 +5,13 @@ import mk.ukim.finki.routingsystem.model.Department;
 import mk.ukim.finki.routingsystem.model.Employee;
 import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
+import mk.ukim.finki.routingsystem.model.dto.Document.CreateDocumentDto;
 import mk.ukim.finki.routingsystem.model.enumerations.DocumentStatus;
 import mk.ukim.finki.routingsystem.model.enumerations.EmployeeType;
 import mk.ukim.finki.routingsystem.model.enumerations.Role;
 import mk.ukim.finki.routingsystem.repository.*;
 import mk.ukim.finki.routingsystem.security.JwtUtil;
+import mk.ukim.finki.routingsystem.service.DocumentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,23 +28,28 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Checks how unexpected errors, unreadable PDFs and already-decided documents are reported.
+ * Checks how unexpected errors, unreadable PDFs, already-decided documents and failed uploads are reported.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,6 +71,8 @@ class ErrorHandlingIT {
   private MockMvc mockMvc;
   @Autowired
   private JwtUtil jwtUtil;
+  @Autowired
+  private DocumentService documentService;
   @Autowired
   private CompanyRepository companyRepository;
   @Autowired
@@ -130,6 +139,21 @@ class ErrorHandlingIT {
     mockMvc.perform(put("/api/documents/{id}/approve", documentId).header("Authorization", token))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.message").value("This document was already approved."));
+  }
+
+  @Test
+  void failedFileReadRollsBackTheUpload() throws Exception {
+    String title = "Rollback document " + UUID.randomUUID();
+    MultipartFile file = mock(MultipartFile.class);
+    when(file.isEmpty()).thenReturn(false);
+    when(file.getBytes()).thenThrow(new IOException("disk error"));
+
+    assertThatThrownBy(() -> documentService.createDocumentAndDocumentVersion(
+            new CreateDocumentDto(title), file, signatory.getId(), company.getId()))
+            .isInstanceOf(IOException.class);
+
+    assertThat(documentRepository.findAll())
+            .noneMatch(document -> title.equals(document.getTitle()));
   }
 
   private Long createDocument(DocumentStatus status, byte[] fileData) {
