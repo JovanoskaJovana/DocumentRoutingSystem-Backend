@@ -33,7 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link DocumentService}
@@ -86,8 +88,18 @@ public class DocumentServiceImpl implements DocumentService {
   @Override
   @Transactional(readOnly = true)
   public Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable) {
-    return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_IdAndCompany_IdOrderByUploadDateTime(documentStatuses, employeeId, companyId, pageable)
-            .map(documentMapper::toDto);
+
+    Page<DocumentListRow> rows = documentRepository.findListRowsRoutedToEmployee(documentStatuses, employeeId, companyId, pageable);
+
+    if (rows.isEmpty()) {
+      return rows.map(row -> documentMapper.toDto(row, List.of()));
+    }
+    List<Long> documentIds = rows.map(DocumentListRow::documentId).getContent();
+    Map<Long, List<String>> signatoriesByDocument = documentRepository.findSignatoryNames(documentIds).stream()
+            .collect(Collectors.groupingBy(DocumentSignatoryName::documentId,
+                    Collectors.mapping(name -> name.firstName() + " " + name.lastName(), Collectors.toList())));
+
+    return rows.map(row -> documentMapper.toDto(row, signatoriesByDocument.getOrDefault(row.documentId(), List.of())));
   }
 
   @Override
