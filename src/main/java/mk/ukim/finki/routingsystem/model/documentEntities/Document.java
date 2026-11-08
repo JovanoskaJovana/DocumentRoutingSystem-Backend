@@ -19,13 +19,22 @@ import java.util.Set;
 
 @Entity
 @Data
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = Document.UNIQUE_TITLE_PER_COMPANY,
+                        columnNames = {"company_id", "title"})
+        }
+)
 public class Document {
+
+  // titles are unique within a company, not across companies
+  public static final String UNIQUE_TITLE_PER_COMPANY = "uk_document_company_title";
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true)
   private String title;
 
   @ManyToOne

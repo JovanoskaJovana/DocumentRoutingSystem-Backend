@@ -103,8 +103,15 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     nextVersion.setVersionNumber(documentVersion.getVersionNumber() == 0 ? 1 : documentVersion.getVersionNumber() + 1);
 
     if (updateDto.title() != null && !updateDto.title().isBlank()) {
-      nextVersion.setFileName(updateDto.title().trim());
-      document.setTitle(updateDto.title().trim());
+      String title = updateDto.title().trim();
+
+      // keeping the current title is not a duplicate, only renaming to another document's title is
+      if (!title.equals(document.getTitle()) && documentRepository.existsByCompany_IdAndTitle(companyId, title)) {
+        throw new DuplicateDocumentTitleException();
+      }
+
+      nextVersion.setFileName(title);
+      document.setTitle(title);
     } else {
       nextVersion.setFileName(documentVersion.getFileName());
     }

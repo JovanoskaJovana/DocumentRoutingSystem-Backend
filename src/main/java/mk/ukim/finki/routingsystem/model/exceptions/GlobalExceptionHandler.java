@@ -2,6 +2,9 @@ package mk.ukim.finki.routingsystem.model.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import mk.ukim.finki.routingsystem.model.documentEntities.Document;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,6 +96,45 @@ public class GlobalExceptionHandler {
     return ResponseEntity
             .status(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
+  }
+
+  /**
+   * Handles uploading or renaming a document to a title that already exists in the same company.
+   *
+   * @param ex the thrown exception
+   * @return 409 Conflict with the exception message in the response body
+   */
+  @ExceptionHandler(DuplicateDocumentTitleException.class)
+  public ResponseEntity<ErrorResponse> handleDuplicateTitle(DuplicateDocumentTitleException ex) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+  }
+
+  /**
+   * Handles database constraint violations. Only the per-company title constraint becomes 409:
+   * it is hit when two requests save the same title at the same time, after both passed the duplicate check.
+   * Every other violation is an unexpected error and goes to {@link #handleGeneric}.
+   *
+   * @param ex      the thrown exception
+   * @param request the request that caused the exception
+   * @return 409 Conflict for a duplicate title, otherwise 500 Internal Server Error
+   */
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+    if (violatesConstraint(ex, Document.UNIQUE_TITLE_PER_COMPANY)) {
+      return handleDuplicateTitle(new DuplicateDocumentTitleException());
+    }
+    return handleGeneric(ex, request);
+  }
+
+  private static boolean violatesConstraint(Throwable ex, String constraintName) {
+    for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
+      if (cause instanceof ConstraintViolationException violation) {
+        return constraintName.equalsIgnoreCase(violation.getConstraintName());
+      }
+    }
+    return false;
   }
 
   /**

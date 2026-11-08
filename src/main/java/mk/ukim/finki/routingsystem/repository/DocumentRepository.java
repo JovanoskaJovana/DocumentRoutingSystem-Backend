@@ -114,5 +114,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
    */
   Optional<Document> findByIdAndCompany_Id(Long id, Long companyId);
 
+  /**
+   * Checks if a company already has a document with the given title.
+   *
+   * @param companyId the id of the given company
+   * @param title     the given title
+   * @return true if the company has a document with this title, false otherwise
+   */
+  boolean existsByCompany_IdAndTitle(Long companyId, String title);
+
 }
  

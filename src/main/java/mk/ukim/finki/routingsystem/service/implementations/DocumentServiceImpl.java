@@ -135,10 +135,16 @@ public class DocumentServiceImpl implements DocumentService {
     Company company = companyRepository.findById(companyId)
             .orElseThrow(() -> new CompanyNotFoundException("Company not found."));
 
+    String title = documentDto.title() != null ? documentDto.title().trim() : null;
+
+    if (title != null && documentRepository.existsByCompany_IdAndTitle(companyId, title)) {
+      throw new DuplicateDocumentTitleException();
+    }
+
     Document document = new Document();
     document.setCompany(company);
     document.setDocumentStatus(DocumentStatus.UPLOADED);
-    document.setTitle(documentDto.title());
+    document.setTitle(title);
     document.setUploadedByEmployee(employee);
     document.setUploadDateTime(LocalDateTime.now());
     documentRepository.save(document);
