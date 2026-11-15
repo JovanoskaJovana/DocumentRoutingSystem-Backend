@@ -80,9 +80,8 @@ public class DocumentRestController {
   public ResponseEntity<DisplayDocumentDto> approveDocument(@PathVariable Long documentId,
                                                             @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-
-    boolean approved = documentService.approveDocument(documentId, employeePrincipal.employeeId(), employeePrincipal.companyId());
-    return approved ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    documentService.approveDocument(documentId, employeePrincipal.employeeId(), employeePrincipal.companyId());
+    return ResponseEntity.noContent().build();
   }
 
   @PreAuthorize("@documentAuth.canSign(#documentId, authentication.principal.companyId, authentication)")
@@ -90,9 +89,8 @@ public class DocumentRestController {
   public ResponseEntity<DisplayDocumentDto> rejectDocument(@PathVariable Long documentId,
                                                            @AuthenticationPrincipal EmployeePrincipal employeePrincipal) {
 
-    boolean rejected = documentService.rejectDocument(documentId, employeePrincipal.employeeId(), employeePrincipal.companyId());
-
-    return rejected ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    documentService.rejectDocument(documentId, employeePrincipal.employeeId(), employeePrincipal.companyId());
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/{documentId}")

@@ -1,5 +1,6 @@
 package mk.ukim.finki.routingsystem.service.routing.rules.implementation;
 
+import lombok.extern.slf4j.Slf4j;
 import mk.ukim.finki.routingsystem.domain.rules.DepartmentRules;
 import mk.ukim.finki.routingsystem.domain.rules.RoutingRules;
 import mk.ukim.finki.routingsystem.domain.rules.TenantRules;
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
  * matches in the title are weighted more heavily than matches in the body.
  */
 
+@Slf4j
 public class KeywordScorer {
 
   private static final double TITLE_WEIGHT = 3.0;
@@ -100,6 +102,7 @@ public class KeywordScorer {
    *
    * @param rules the full set of routing rules
    * @return a nested map of tenant code to department key to compiled rules
+   * @throws IllegalStateException if a tenant has no departments
    */
   private static Map<String, Map<String, CompiledRules>> buildCache(RoutingRules rules) {
 
@@ -120,6 +123,12 @@ public class KeywordScorer {
 
       Map<String, DepartmentRules> departments = tenantRules.getDepartments();
 
+      // without departments every routing of this company would fail, so refuse to start
+      if (departments == null || departments.isEmpty()) {
+        throw new IllegalStateException("Routing rules for company " + tenantId
+                + " have no departments. Add at least one department under app.routing.tenants." + tenantId + ".departments.");
+      }
+
       for (Map.Entry<String, DepartmentRules> departmentEntry : departments.entrySet()) {
 
         String departmentId = departmentEntry.getKey();
@@ -130,6 +139,13 @@ public class KeywordScorer {
                 compileKeywords(departmentRules.getWeak()),
                 compileKeywords(departmentRules.getNegative())
         );
+
+        // such a department always scores 0: allowed, but most likely a configuration mistake
+        if (compiledRules.strong().isEmpty() && compiledRules.weak().isEmpty() && compiledRules.negative().isEmpty()) {
+          log.warn("Routing rules for company {}: department {} has no keywords, so documents are never routed to it.",
+                  tenantId, departmentId);
+        }
+
         perDepartment.put(departmentId, compiledRules);
 
       }

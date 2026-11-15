@@ -28,8 +28,14 @@ public class RoutingDecisionMaker {
    *
    * @param scores a map of department keys to their computed keyword scores
    * @return a {@link RoutingDecision} containing the result of the routing decision
+   * @throws IllegalStateException if there are no scores, i.e. the routing rules have no departments
    */
   public RoutingDecision decide(Map<String, Double> scores) {
+
+    if (scores == null || scores.isEmpty()) {
+      throw new IllegalStateException("Cannot make a routing decision: there are no department scores. "
+              + "Check that the routing rules of the company have at least one department.");
+    }
 
     double topScore = Collections.max(scores.values());
 

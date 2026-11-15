@@ -5,6 +5,7 @@ import mk.ukim.finki.routingsystem.model.documentEntities.Document;
 import mk.ukim.finki.routingsystem.model.documentEntities.DocumentVersion;
 import mk.ukim.finki.routingsystem.model.dto.Document.DisplayAdminDocumentDto;
 import mk.ukim.finki.routingsystem.model.dto.Document.DisplayDocumentDto;
+import mk.ukim.finki.routingsystem.model.dto.Document.DocumentListRow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -100,7 +101,39 @@ public interface DocumentMapper {
 
     Long documentId = documentVersion.getDocument() != null ? documentVersion.getDocument().getId() : null;
 
-    return "/api/documents/" + documentId + "/versions/" + documentVersion.getId() + "/download";
+    return versionDownloadUrl(documentId, documentVersion.getId());
+  }
+
+  /**
+   * Converts a {@link DocumentListRow} and the names of the employees the document is routed to into a DTO.
+   * Gives the same result as {@link #toDto(Document)}, without loading the document entity.
+   *
+   * @param row               the given document row
+   * @param routedToEmployees the full names of the employees the document is routed to
+   * @return the {@link DisplayDocumentDto} for the row
+   */
+  default DisplayDocumentDto toDto(DocumentListRow row, List<String> routedToEmployees) {
+    return new DisplayDocumentDto(
+            row.documentId(),
+            row.title(),
+            row.uploaderFirstName() + " " + row.uploaderLastName(),
+            routedToEmployees,
+            row.uploadDateTime(),
+            row.documentStatus() != null ? row.documentStatus().name() : null,
+            row.versionId() != null ? "v" + row.versionNumber() : null,
+            row.versionId() != null ? versionDownloadUrl(row.documentId(), row.versionId()) : null
+    );
+  }
+
+  /**
+   * Builds the download URL in the format /api/documents/{documentId}/versions/{versionId}/download.
+   *
+   * @param documentId the id of the document
+   * @param versionId  the id of the document version
+   * @return the formatted download URL
+   */
+  static String versionDownloadUrl(Long documentId, Long versionId) {
+    return "/api/documents/" + documentId + "/versions/" + versionId + "/download";
   }
 
 }

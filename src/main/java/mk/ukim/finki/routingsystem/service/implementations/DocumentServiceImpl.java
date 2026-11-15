@@ -25,6 +25,7 @@ import mk.ukim.finki.routingsystem.service.routing.text.DocumentTextExtractor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link DocumentService}
@@ -85,8 +88,18 @@ public class DocumentServiceImpl implements DocumentService {
   @Override
   @Transactional(readOnly = true)
   public Page<DisplayDocumentDto> findAllByRoutedToEmployee(List<DocumentStatus> documentStatuses, Long employeeId, Long companyId, Pageable pageable) {
-    return documentRepository.findAllByDocumentStatusInAndRoutedToEmployees_IdAndCompany_IdOrderByUploadDateTime(documentStatuses, employeeId, companyId, pageable)
-            .map(documentMapper::toDto);
+
+    Page<DocumentListRow> rows = documentRepository.findListRowsRoutedToEmployee(documentStatuses, employeeId, companyId, pageable);
+
+    if (rows.isEmpty()) {
+      return rows.map(row -> documentMapper.toDto(row, List.of()));
+    }
+    List<Long> documentIds = rows.map(DocumentListRow::documentId).getContent();
+    Map<Long, List<String>> signatoriesByDocument = documentRepository.findSignatoryNames(documentIds).stream()
+            .collect(Collectors.groupingBy(DocumentSignatoryName::documentId,
+                    Collectors.mapping(name -> name.firstName() + " " + name.lastName(), Collectors.toList())));
+
+    return rows.map(row -> documentMapper.toDto(row, signatoriesByDocument.getOrDefault(row.documentId(), List.of())));
   }
 
   @Override
@@ -105,7 +118,7 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   @Override
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public DisplayDocumentDto createDocumentAndDocumentVersion(CreateDocumentDto documentDto, MultipartFile file, Long uploaderId, Long companyId) throws IOException {
 
     if (file == null || file.isEmpty()) {
@@ -122,10 +135,16 @@ public class DocumentServiceImpl implements DocumentService {
     Company company = companyRepository.findById(companyId)
             .orElseThrow(() -> new CompanyNotFoundException("Company not found."));
 
+    String title = documentDto.title() != null ? documentDto.title().trim() : null;
+
+    if (title != null && documentRepository.existsByCompany_IdAndTitle(companyId, title)) {
+      throw new DuplicateDocumentTitleException();
+    }
+
     Document document = new Document();
     document.setCompany(company);
     document.setDocumentStatus(DocumentStatus.UPLOADED);
-    document.setTitle(documentDto.title());
+    document.setTitle(title);
     document.setUploadedByEmployee(employee);
     document.setUploadDateTime(LocalDateTime.now());
     documentRepository.save(document);
@@ -290,7 +309,7 @@ public class DocumentServiceImpl implements DocumentService {
 
   @Override
   @Transactional
-  public boolean approveDocument(Long documentId, Long employeeId, Long companyId) {
+  public void approveDocument(Long documentId, Long employeeId, Long companyId) {
 
     Document document = documentRepository.findByIdAndCompany_Id(documentId, companyId)
             .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
@@ -298,31 +317,26 @@ public class DocumentServiceImpl implements DocumentService {
     Employee employee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId)
             .orElseThrow(() -> new EmployeeNotFoundException("Employee not found."));
 
-    boolean isSignatory = employee.getType().equals(EmployeeType.SIGNATORY);
+    requireDecidable(document, employee);
 
-    if (document.getDocumentStatus() == DocumentStatus.ROUTED && isSignatory) {
-      DocumentStatus from = document.getDocumentStatus();
-      document.setDocumentStatus(DocumentStatus.APPROVED);
-      documentRepository.save(document);
+    DocumentStatus from = document.getDocumentStatus();
+    document.setDocumentStatus(DocumentStatus.APPROVED);
+    documentRepository.save(document);
 
-      applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
-              document.getId(),
-              document.getCurrentDocumentVersion().getId(),
-              employee.getId(),
-              ActionType.APPROVED,
-              from,
-              DocumentStatus.APPROVED,
-              LocalDateTime.now()
-      ));
-
-      return true;
-    }
-    return false;
+    applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
+            document.getId(),
+            document.getCurrentDocumentVersion().getId(),
+            employee.getId(),
+            ActionType.APPROVED,
+            from,
+            DocumentStatus.APPROVED,
+            LocalDateTime.now()
+    ));
   }
 
   @Override
   @Transactional
-  public boolean rejectDocument(Long documentId, Long employeeId, Long companyId) {
+  public void rejectDocument(Long documentId, Long employeeId, Long companyId) {
 
     Document document = documentRepository.findByIdAndCompany_Id(documentId, companyId)
             .orElseThrow(() -> new DocumentNotFoundException("Document not found."));
@@ -330,26 +344,45 @@ public class DocumentServiceImpl implements DocumentService {
     Employee employee = employeeRepository.findByIdAndCompany_Id(employeeId, companyId)
             .orElseThrow(() -> new EmployeeNotFoundException("Employee not found."));
 
-    boolean isSignatory = employee.getType().equals(EmployeeType.SIGNATORY);
+    requireDecidable(document, employee);
 
-    if (document.getDocumentStatus() == DocumentStatus.ROUTED && isSignatory) {
-      DocumentStatus from = document.getDocumentStatus();
-      document.setDocumentStatus(DocumentStatus.REJECTED);
-      documentRepository.save(document);
+    DocumentStatus from = document.getDocumentStatus();
+    document.setDocumentStatus(DocumentStatus.REJECTED);
+    documentRepository.save(document);
 
-      applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
-              document.getId(),
-              document.getCurrentDocumentVersion().getId(),
-              employee.getId(),
-              ActionType.REJECTED,
-              from,
-              DocumentStatus.REJECTED,
-              LocalDateTime.now()
-      ));
+    applicationEventPublisher.publishEvent(new DocumentActionRequestedEvent(
+            document.getId(),
+            document.getCurrentDocumentVersion().getId(),
+            employee.getId(),
+            ActionType.REJECTED,
+            from,
+            DocumentStatus.REJECTED,
+            LocalDateTime.now()
+    ));
+  }
 
-      return true;
+  /**
+   * Checks that the employee may approve or reject the document and that it is still waiting for a decision.
+   *
+   * @throws AccessDeniedException           if the employee is not a signatory
+   * @throws DocumentAlreadyDecidedException if the document was already approved or rejected
+   * @throws InvalidDocumentStateException   if the document is in any other state than ROUTED
+   */
+  private static void requireDecidable(Document document, Employee employee) {
+
+    if (employee.getType() != EmployeeType.SIGNATORY) {
+      throw new AccessDeniedException("Only signatories can approve or reject documents.");
     }
-    return false;
+
+    DocumentStatus status = document.getDocumentStatus();
+
+    if (status == DocumentStatus.APPROVED || status == DocumentStatus.REJECTED) {
+      throw new DocumentAlreadyDecidedException("This document was already " + status.name().toLowerCase() + ".");
+    }
+
+    if (status != DocumentStatus.ROUTED) {
+      throw new InvalidDocumentStateException("Only routed documents can be approved or rejected.");
+    }
   }
 
 }
